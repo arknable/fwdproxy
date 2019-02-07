@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const url = "http://google.com"
+const testURL = "http://google.com"
 
 func TestHandler(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, testURL, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/arknable/upwork-test-proxy/authproxy/handler"
+	"github.com/arknable/upwork-test-proxy/handler"
 )
 
 func main() {

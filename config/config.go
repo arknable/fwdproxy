@@ -6,4 +6,7 @@ var (
 
 	// AllowedPassword is a security key of Username
 	AllowedPassword = "testpassword"
+
+	// ProxyAddress is address of external proxy server
+	ProxyAddress = "http://localhost:8999"
 )
