@@ -8,5 +8,5 @@ var (
 	AllowedPassword = "testpassword"
 
 	// ProxyAddress is address of external proxy server
-	ProxyAddress = "http://localhost:8999"
+	ProxyAddress = "http://localhost:3128"
 )
