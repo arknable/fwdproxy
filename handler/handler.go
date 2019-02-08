@@ -12,11 +12,11 @@ import (
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
 	username, password, ok := req.BasicAuth()
 	if !ok {
-		http.Error(res, "Missing authorization", http.StatusUnauthorized)
+		http.Error(res, "Restricted access only", http.StatusUnauthorized)
 		return
 	}
 	if !config.AuthIsValid(username, password) {
-		http.Error(res, "Invalid authorization", http.StatusForbidden)
+		http.Error(res, "You have no access to do a request", http.StatusForbidden)
 		return
 	}
 
