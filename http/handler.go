@@ -1,6 +1,8 @@
 package http
 
 import (
+	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,6 +19,11 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	credential := fmt.Sprintf("%s:%s", config.ProxyUsername, config.ProxyPassword)
+	authorization := base64.StdEncoding.EncodeToString([]byte(credential))
+	request.Header.Add("Proxy-Authorization", fmt.Sprintf("Basic %s", authorization))
+
 	proxyURL, err := url.Parse(config.ProxyAddress)
 	if err != nil {
 		log.Println(err)
