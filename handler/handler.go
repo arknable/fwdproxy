@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	cfg "github.com/arknable/upwork-test-proxy/config"
+	"github.com/arknable/upwork-test-proxy/config"
 	httphandler "github.com/arknable/upwork-test-proxy/http"
 	tlshandler "github.com/arknable/upwork-test-proxy/tls"
 )
@@ -15,7 +15,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Missing authorization", http.StatusUnauthorized)
 		return
 	}
-	if (username != cfg.AllowedUsername) || (password != cfg.AllowedPassword) {
+	if !config.AuthIsValid(username, password) {
 		http.Error(res, "Invalid authorization", http.StatusForbidden)
 		return
 	}
