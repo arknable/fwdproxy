@@ -8,7 +8,6 @@ import (
 
 	"github.com/arknable/upwork-test-proxy/client"
 	"github.com/arknable/upwork-test-proxy/config"
-	"github.com/arknable/upwork-test-proxy/server"
 )
 
 const (
@@ -24,7 +23,7 @@ func doRequest(method string, useTLS bool, body io.Reader, fn func(*http.Request
 	if useTLS {
 		proc = "https"
 	}
-	url, err := url.Parse(fmt.Sprintf("%s://%s", proc, targetURL))
+	url, err := url.Parse(fmt.Sprintf("http://%s", targetURL))
 	if err != nil {
 		return nil, err
 	}
@@ -40,10 +39,14 @@ func doRequest(method string, useTLS bool, body io.Reader, fn func(*http.Request
 		fn(request)
 	}
 
-	cl, err := client.NewProxied(fmt.Sprintf("%s://%s:%s", proc, proxyAddress, server.HTTPPort))
+	port := config.HTTPPort
+	if useTLS {
+		port = config.TLSPort
+	}
+	cl, err := client.NewProxied(fmt.Sprintf("%s://%s:%s", proc, proxyAddress, port), useTLS)
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("----> ", request.URL.String())
 	return cl.Do(request)
 }
