@@ -1,4 +1,4 @@
-package http
+package tls
 
 import (
 	"net/http"
@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testURL = "http://google.com"
+const testURL = "https://google.com"
 
 func TestHandler(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, testURL, nil)
+	req, err := http.NewRequest(http.MethodConnect, testURL, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -6,8 +6,8 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 
+	"github.com/arknable/upwork-test-proxy/client"
 	"github.com/arknable/upwork-test-proxy/config"
 )
 
@@ -25,18 +25,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 	authorization := base64.StdEncoding.EncodeToString([]byte(credential))
 	request.Header.Add("Proxy-Authorization", fmt.Sprintf("Basic %s", authorization))
 
-	proxyURL, err := url.Parse(config.ProxyAddress)
-	if err != nil {
-		log.Println(err)
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	client := &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyURL(proxyURL),
-		},
-	}
+	client, err := client.NewProxied(config.ProxyAddress)
 	resp, err := client.Do(request)
 	if err != nil {
 		log.Println(err)

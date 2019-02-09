@@ -2,13 +2,16 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/arknable/upwork-test-proxy/handler"
+	"github.com/arknable/upwork-test-proxy/server"
 )
 
 func main() {
 	log.SetOutput(os.Stdout)
-	http.ListenAndServe(":8234", http.HandlerFunc(handler.HandleRequest))
+
+	srv := server.New()
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
 }
