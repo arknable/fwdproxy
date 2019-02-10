@@ -8,6 +8,7 @@ import (
 
 	"github.com/arknable/fwdproxy/config"
 	"github.com/arknable/fwdproxy/server"
+	"github.com/arknable/fwdproxy/user"
 )
 
 // HandleRequest handles requests
@@ -18,7 +19,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 			http.Error(res, "Restricted access only", http.StatusUnauthorized)
 			return
 		}
-		if !config.AuthIsValid(username, password) {
+		if !user.Repo().IsValid(username, password) {
 			http.Error(res, "You have no access to do a request", http.StatusForbidden)
 			return
 		}

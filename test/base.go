@@ -12,6 +12,7 @@ import (
 	"github.com/arknable/fwdproxy/config"
 	"github.com/arknable/fwdproxy/handler"
 	"github.com/arknable/fwdproxy/server"
+	"github.com/arknable/fwdproxy/user"
 )
 
 const (
@@ -39,14 +40,14 @@ type serverTest struct {
 
 // Creates new HTTP test
 func new() *serverTest {
-	users := config.Users()
+	username, password := user.Repo().Random()
 	return &serverTest{
 		url:            targetURL,
 		method:         http.MethodGet,
 		proxyAddress:   proxyAddress,
 		UsingBasicAuth: true,
-		Username:       users[0],
-		Password:       config.Password(users[0]),
+		Username:       username,
+		Password:       password,
 	}
 }
 
