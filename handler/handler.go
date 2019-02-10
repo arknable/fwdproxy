@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"io"
+	"log"
 	"net/http"
 	"strings"
 
+	"github.com/arknable/upwork-test-proxy/client"
 	"github.com/arknable/upwork-test-proxy/config"
-	httphandler "github.com/arknable/upwork-test-proxy/http"
 )
 
 // HandleRequest handles requests
@@ -21,12 +23,42 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 	} else {
-		req.URL.Scheme = "https"
+		req.URL.Scheme = "https" // Somehow Scheme becomes empty on TLS
 	}
 
-	// if req.Method == http.MethodConnect {
-	// 	tlshandler.HandleRequest(res, req)
-	// 	return
-	// }
-	httphandler.HandleRequest(res, req)
+	request, err := http.NewRequest(req.Method, req.URL.String(), req.Body)
+	if err != nil {
+		log.Println(err)
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	request.Header.Set("Host", req.Host)
+	request.Header.Set("X-Forwarded-For", req.RemoteAddr)
+	for hkey, hval := range req.Header {
+		for _, v := range hval {
+			request.Header.Add(hkey, v)
+		}
+	}
+
+	client, err := client.New(config.ProxyAddress)
+	resp, err := client.Do(request)
+	if err != nil {
+		log.Println(err)
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	for hkey, hval := range resp.Header {
+		for _, v := range hval {
+			res.Header().Add(hkey, v)
+		}
+	}
+	res.WriteHeader(resp.StatusCode)
+	_, err = io.Copy(res, resp.Body)
+	if err != nil {
+		log.Println(err)
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
