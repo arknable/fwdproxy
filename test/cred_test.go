@@ -1,67 +1,44 @@
 package test
 
 import (
-	"log"
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/arknable/upwork-test-proxy/server"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNoCred(t *testing.T) {
-	srv := server.New()
-	go srv.ListenAndServe()
-	defer srv.Close()
-	time.Sleep(500 * time.Millisecond)
+	test := new()
+	test.UsingBasicAuth = false
+	defer test.Close()
 
-	fn := func(r *http.Request) {
-		r.SetBasicAuth("", "")
+	if err := test.Do(); err != nil {
+		t.Fatal(err)
 	}
-	resp, err := doRequest(http.MethodGet, false, nil, fn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
 
-	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	assert.Equal(t, http.StatusUnauthorized, test.Response.StatusCode)
 }
 
 func TestInvalidUser(t *testing.T) {
-	srv := server.New()
-	go srv.ListenAndServe()
-	defer srv.Close()
-	time.Sleep(500 * time.Millisecond)
+	test := new()
+	test.Username = "foo"
+	defer test.Close()
 
-	fn := func(r *http.Request) {
-		_, password, _ := r.BasicAuth()
-		r.SetBasicAuth("foo", password)
+	if err := test.Do(); err != nil {
+		t.Fatal(err)
 	}
-	resp, err := doRequest(http.MethodGet, false, nil, fn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
 
-	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	assert.Equal(t, http.StatusForbidden, test.Response.StatusCode)
 }
 
 func TestInvalidPassword(t *testing.T) {
-	srv := server.New()
-	go srv.ListenAndServe()
-	defer srv.Close()
-	time.Sleep(500 * time.Millisecond)
+	test := new()
+	test.Password = "n0tv4lidpwd"
+	defer test.Close()
 
-	fn := func(r *http.Request) {
-		username, _, _ := r.BasicAuth()
-		r.SetBasicAuth(username, "n0tv4lidpwd")
+	if err := test.Do(); err != nil {
+		t.Fatal(err)
 	}
-	resp, err := doRequest(http.MethodGet, false, nil, fn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
 
-	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	assert.Equal(t, http.StatusForbidden, test.Response.StatusCode)
 }

@@ -25,7 +25,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	client, err := client.NewProxied(config.ProxyAddress, false)
+	client, err := client.New(config.ProxyAddress)
 	resp, err := client.Do(request)
 	if err != nil {
 		log.Println(err)
