@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/arknable/fwdproxy/client"
 	"github.com/arknable/fwdproxy/config"
+	"github.com/arknable/fwdproxy/server"
 )
 
 // HandleRequest handles requests
@@ -40,7 +40,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	client, err := client.New(config.ProxyAddress)
+	client, err := server.NewClient(config.ProxyAddress)
 	resp, err := client.Do(request)
 	if err != nil {
 		log.Println(err)

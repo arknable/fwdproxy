@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arknable/fwdproxy/client"
 	"github.com/arknable/fwdproxy/config"
+	"github.com/arknable/fwdproxy/handler"
 	"github.com/arknable/fwdproxy/server"
 )
 
@@ -73,11 +73,12 @@ func (h *serverTest) startServer(errChan chan error) {
 
 // Do performs test
 func (h *serverTest) Do() error {
+	handlerFunc := http.HandlerFunc(handler.HandleRequest)
 	var srv *http.Server
 	if h.IsTLS {
-		_, srv = server.NewTLS()
+		_, srv = server.NewTLS(handlerFunc)
 	} else {
-		srv = server.New()
+		srv = server.New(handlerFunc)
 	}
 	h.server = srv
 	defer h.server.Close()
@@ -103,7 +104,7 @@ func (h *serverTest) Do() error {
 	if h.IsTLS {
 		proxyAddr = fmt.Sprintf("https://%s:%s", proxyAddress, config.TLSPort)
 	}
-	cl, err := client.New(proxyAddr)
+	cl, err := server.NewClient(proxyAddr)
 	if err != nil {
 		return err
 	}

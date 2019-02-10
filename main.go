@@ -3,10 +3,12 @@ package main
 import (
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/arknable/fwdproxy/config"
+	"github.com/arknable/fwdproxy/handler"
 	"github.com/arknable/fwdproxy/server"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -33,10 +35,11 @@ func main() {
 	defer file.Close()
 	log.SetOutput(io.MultiWriter(os.Stdout, file))
 
+	handlerFunc := http.HandlerFunc(handler.HandleRequest)
 	var mgr *autocert.Manager
 
 	if config.IsProduction {
-		m, srv := server.NewTLS()
+		m, srv := server.NewTLS(handlerFunc)
 		mgr = m
 
 		go func() {
@@ -47,7 +50,7 @@ func main() {
 		}()
 	}
 
-	srv := server.New()
+	srv := server.New(handlerFunc)
 	if mgr != nil {
 		srv.Handler = mgr.HTTPHandler(srv.Handler)
 	}

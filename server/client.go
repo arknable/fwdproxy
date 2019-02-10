@@ -1,4 +1,4 @@
-package client
+package server
 
 import (
 	"crypto/tls"
@@ -8,8 +8,8 @@ import (
 	"github.com/arknable/fwdproxy/config"
 )
 
-// New creates HTTP/HTTPS client given its proxy address
-func New(proxyAddr string) (*http.Client, error) {
+// NewClient creates HTTP/HTTPS client given its proxy address
+func NewClient(proxyAddr string) (*http.Client, error) {
 	proxyURL, err := url.Parse(proxyAddr)
 	if err != nil {
 		return nil, err

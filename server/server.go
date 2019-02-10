@@ -9,24 +9,23 @@ import (
 	"time"
 
 	"github.com/arknable/fwdproxy/config"
-	"github.com/arknable/fwdproxy/handler"
 	"golang.org/x/crypto/acme/autocert"
 )
 
 // New creates an HTTP server
-func New() *http.Server {
+func New(handler http.Handler) *http.Server {
 	return &http.Server{
 		Addr:         fmt.Sprintf(":%s", config.HTTPPort),
 		ReadTimeout:  20 * time.Second,
 		WriteTimeout: 20 * time.Second,
 		IdleTimeout:  120 * time.Second,
-		Handler:      http.HandlerFunc(handler.HandleRequest),
+		Handler:      handler,
 	}
 }
 
 // NewTLS creates an HTTPS server
-func NewTLS() (*autocert.Manager, *http.Server) {
-	srv := New()
+func NewTLS(handler http.Handler) (*autocert.Manager, *http.Server) {
+	srv := New(handler)
 	srv.Addr = fmt.Sprintf(":%s", config.TLSPort)
 	if !config.IsProduction {
 		return nil, srv
