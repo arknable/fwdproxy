@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/arknable/upwork-test-proxy/config"
+	"github.com/arknable/fwdproxy/config"
 )
 
 // New creates HTTP/HTTPS client given its proxy address

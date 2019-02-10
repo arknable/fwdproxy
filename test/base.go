@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arknable/upwork-test-proxy/client"
-	"github.com/arknable/upwork-test-proxy/config"
-	"github.com/arknable/upwork-test-proxy/server"
+	"github.com/arknable/fwdproxy/client"
+	"github.com/arknable/fwdproxy/config"
+	"github.com/arknable/fwdproxy/server"
 )
 
 const (

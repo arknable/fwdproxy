@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/arknable/upwork-test-proxy/config"
-	"github.com/arknable/upwork-test-proxy/handler"
+	"github.com/arknable/fwdproxy/config"
+	"github.com/arknable/fwdproxy/handler"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -42,7 +42,7 @@ func NewTLS() (*autocert.Manager, *http.Server) {
 			if host == config.TLSAllowedHost {
 				return nil
 			}
-			return fmt.Errorf("ACME: only %s allowed", config.TLSAllowedHost)
+			return fmt.Errorf("AutoCert/ACME: only %s allowed", config.TLSAllowedHost)
 		},
 	}
 	srv.TLSConfig = &tls.Config{

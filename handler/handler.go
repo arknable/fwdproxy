@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/arknable/upwork-test-proxy/client"
-	"github.com/arknable/upwork-test-proxy/config"
+	"github.com/arknable/fwdproxy/client"
+	"github.com/arknable/fwdproxy/config"
 )
 
 // HandleRequest handles requests

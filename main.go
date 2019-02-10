@@ -1,17 +1,58 @@
 package main
 
 import (
+	"io"
 	"log"
 	"os"
+	"strconv"
 
-	"github.com/arknable/upwork-test-proxy/server"
+	"github.com/arknable/fwdproxy/config"
+	"github.com/arknable/fwdproxy/server"
+	"golang.org/x/crypto/acme/autocert"
+)
+
+// Variables to be set at build
+var (
+	// IsProduction overrides config.IsProduction
+	IsProduction = "false"
 )
 
 func main() {
-	log.SetOutput(os.Stdout)
+	isProd, err := strconv.ParseBool(IsProduction)
+	if err != nil {
+		log.Printf("Invalid value for IsProduction: %s", IsProduction)
+	} else {
+		config.IsProduction = isProd
+	}
+
+	// Dump log to standard output and file
+	file, err := os.OpenFile("proxy.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("Can't open log file: %v", err)
+	}
+	defer file.Close()
+	log.SetOutput(io.MultiWriter(os.Stdout, file))
+
+	var mgr *autocert.Manager
+
+	if config.IsProduction {
+		m, srv := server.NewTLS()
+		mgr = m
+
+		go func() {
+			log.Printf("Starting HTTPS Server at %s ...\n", srv.Addr)
+			if err := srv.ListenAndServeTLS("", ""); err != nil {
+				log.Fatal("HTTPS Error: ", err)
+			}
+		}()
+	}
 
 	srv := server.New()
+	if mgr != nil {
+		srv.Handler = mgr.HTTPHandler(srv.Handler)
+	}
+	log.Printf("Starting HTTP Server at %s ...\n", srv.Addr)
 	if err := srv.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		log.Fatal("HTTP Error: ", err)
 	}
 }
