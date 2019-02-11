@@ -11,8 +11,8 @@ type DummyRepository struct {
 	users map[string]string
 }
 
-// Initializes repository data
-func (r *DummyRepository) init() {
+// Initialize implements Repository.Initialize
+func (r *DummyRepository) Initialize() error {
 	r.users = map[string]string{
 		"kirk":   "kirkpassword",
 		"spock":  "spockpassword",
@@ -20,6 +20,7 @@ func (r *DummyRepository) init() {
 		"chekov": "chekovpassword",
 		"sulu":   "sulupassword",
 	}
+	return nil
 }
 
 // IsValid implements Repository.IsValid
