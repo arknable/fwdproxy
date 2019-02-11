@@ -12,12 +12,12 @@ const (
 
 	// TLSPort is server port for HTTPS
 	TLSPort = "9000"
-
-	// TLSAllowedHost is host name to be allowed by ACME manager
-	TLSAllowedHost = "localhost"
 )
 
 var (
+	// TLSAllowedHost is host name to be allowed by ACME manager
+	TLSAllowedHost = "localhost"
+
 	// CertCacheDir is certificate caching root folder
 	CertCacheDir string
 

@@ -17,15 +17,20 @@ import (
 var (
 	// IsProduction overrides config.IsProduction
 	IsProduction = "false"
+
+	// TLSAllowedHost overrides config.TLSAllowedHost
+	TLSAllowedHost = config.TLSAllowedHost
 )
 
 func main() {
+	// Check config overrides
 	isProd, err := strconv.ParseBool(IsProduction)
 	if err != nil {
 		log.Printf("Invalid value for IsProduction: %s", IsProduction)
 	} else {
 		config.IsProduction = isProd
 	}
+	config.TLSAllowedHost = TLSAllowedHost
 
 	// Dump log to standard output and file
 	file, err := os.OpenFile("proxy.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
