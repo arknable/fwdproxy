@@ -10,7 +10,6 @@ import (
 	"github.com/arknable/fwdproxy/config"
 	"github.com/arknable/fwdproxy/handler"
 	"github.com/arknable/fwdproxy/server"
-	"golang.org/x/crypto/acme/autocert"
 )
 
 // Variables to be set at build
@@ -46,24 +45,15 @@ func main() {
 	log.SetOutput(io.MultiWriter(os.Stdout, file))
 
 	handlerFunc := http.HandlerFunc(handler.HandleRequest)
-	var mgr *autocert.Manager
-
-	if config.IsProduction {
-		m, srv := server.NewTLS(handlerFunc)
-		mgr = m
-
-		go func() {
-			log.Printf("Starting HTTPS Server at %s ...\n", srv.Addr)
-			if err := srv.ListenAndServeTLS("", ""); err != nil {
-				log.Fatal("HTTPS Error: ", err)
-			}
-		}()
-	}
+	tlssrv := server.NewTLS(handlerFunc)
+	go func() {
+		log.Printf("Starting HTTPS Server at %s ...\n", srv.Addr)
+		if err := srv.ListenAndServeTLS(config.CertPath, config.KeyPath); err != nil {
+			log.Fatal("HTTPS Error: ", err)
+		}
+	}()
 
 	srv := server.New(handlerFunc)
-	if mgr != nil {
-		srv.Handler = mgr.HTTPHandler(srv.Handler)
-	}
 	log.Printf("Starting HTTP Server at %s ...\n", srv.Addr)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal("HTTP Error: ", err)

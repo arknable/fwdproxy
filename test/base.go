@@ -77,7 +77,7 @@ func (h *serverTest) Do() error {
 	handlerFunc := http.HandlerFunc(handler.HandleRequest)
 	var srv *http.Server
 	if h.IsTLS {
-		_, srv = server.NewTLS(handlerFunc)
+		srv = server.NewTLS(handlerFunc)
 	} else {
 		srv = server.New(handlerFunc)
 	}
