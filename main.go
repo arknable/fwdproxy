@@ -48,17 +48,17 @@ func main() {
 	handlerFunc := http.HandlerFunc(handler.HandleRequest)
 	var mgr *autocert.Manager
 
-	// if config.IsProduction {
-	// 	m, srv := server.NewTLS(handlerFunc)
-	// 	mgr = m
+	if config.IsProduction {
+		m, srv := server.NewTLS(handlerFunc)
+		mgr = m
 
-	// 	go func() {
-	// 		log.Printf("Starting HTTPS Server at %s ...\n", srv.Addr)
-	// 		if err := srv.ListenAndServeTLS("", ""); err != nil {
-	// 			log.Fatal("HTTPS Error: ", err)
-	// 		}
-	// 	}()
-	// }
+		go func() {
+			log.Printf("Starting HTTPS Server at %s ...\n", srv.Addr)
+			if err := srv.ListenAndServeTLS("", ""); err != nil {
+				log.Fatal("HTTPS Error: ", err)
+			}
+		}()
+	}
 
 	srv := server.New(handlerFunc)
 	if mgr != nil {
