@@ -19,7 +19,7 @@ var (
 	IsProduction = "false"
 
 	// TLSAllowedHost overrides config.TLSAllowedHost
-	TLSAllowedHost = config.TLSAllowedHost
+	TLSAllowedHost = "localhost"
 )
 
 func main() {
