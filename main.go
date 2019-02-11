@@ -31,6 +31,11 @@ func main() {
 		config.IsProduction = isProd
 	}
 	config.TLSAllowedHost = TLSAllowedHost
+	log.Println("Using following configurations:")
+	log.Println("-------------------------------")
+	log.Println("IsProduction	: ", IsProduction)
+	log.Println("TLSAllowedHost	: ", TLSAllowedHost)
+	log.Println()
 
 	// Dump log to standard output and file
 	file, err := os.OpenFile("proxy.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
