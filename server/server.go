@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"time"
@@ -23,5 +24,6 @@ func New(handler http.Handler) *http.Server {
 func NewTLS(handler http.Handler) *http.Server {
 	srv := New(handler)
 	srv.Addr = fmt.Sprintf(":%s", config.TLSPort)
+	srv.TLSNextProto = make(map[string]func(*Server, *tls.Conn, http.Handler))
 	return srv
 }
