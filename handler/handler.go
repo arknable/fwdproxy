@@ -13,8 +13,6 @@ import (
 
 // HandleRequest handles requests
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
-	log.Printf("New request to %s [%s]\n", req.URL.String(), req.Method)
-
 	if req.URL.Scheme == "http" {
 		username, password, ok := req.BasicAuth()
 		if !ok || (len(strings.Trim(username, " ")) == 0) {
@@ -35,9 +33,11 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		req.URL.Scheme = "https" // Somehow Scheme becomes empty on TLS
 	}
 
+	log.Printf("New request to %s [%s]\n", req.URL.String(), req.Method)
+
 	request, err := http.NewRequest(req.Method, req.URL.String(), req.Body)
 	if err != nil {
-		log.Println(err)
+		log.Println("http.NewRequest: ", err)
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
