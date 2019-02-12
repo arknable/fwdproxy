@@ -12,3 +12,4 @@
 *.out
 srv
 test/fwdproxy.db
+fwdproxy

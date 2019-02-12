@@ -60,8 +60,8 @@ func main() {
 	handlerFunc := http.HandlerFunc(handler.HandleRequest)
 	tlssrv := server.NewTLS(handlerFunc)
 	go func() {
-		log.Printf("Starting HTTPS Server at %s ...\n", srv.Addr)
-		if err := srv.ListenAndServeTLS(config.CertPath, config.KeyPath); err != nil {
+		log.Printf("Starting HTTPS Server at %s ...\n", tlssrv.Addr)
+		if err := tlssrv.ListenAndServeTLS(config.CertPath, config.KeyPath); err != nil {
 			log.Fatal("HTTPS Error: ", err)
 		}
 	}()
