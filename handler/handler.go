@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -19,7 +20,14 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 			http.Error(res, "Restricted access only", http.StatusUnauthorized)
 			return
 		}
-		if !user.Repo().IsValid(username, password) {
+		valid, err := user.Repo().Validate(username, password)
+		fmt.Printf("%s/%s: %v\n", username, password, valid)
+		if err != nil {
+			http.Error(res, "Failed to validate user", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+		if !valid {
 			http.Error(res, "You have no access to do a request", http.StatusForbidden)
 			return
 		}

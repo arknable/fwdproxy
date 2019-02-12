@@ -10,6 +10,7 @@ import (
 	"github.com/arknable/fwdproxy/config"
 	"github.com/arknable/fwdproxy/handler"
 	"github.com/arknable/fwdproxy/server"
+	"github.com/arknable/fwdproxy/user"
 )
 
 // Variables to be set at build
@@ -19,6 +20,12 @@ var (
 
 	// TLSAllowedHost overrides config.TLSAllowedHost
 	TLSAllowedHost = "localhost"
+
+	// BuiltInUsername overrides user.BuiltInUsername
+	BuiltInUsername = "admin"
+
+	// BuiltInUserPwd overrides user.BuiltInUserPwd
+	BuiltInUserPwd = "4dm1n"
 )
 
 func main() {
@@ -30,6 +37,9 @@ func main() {
 		config.IsProduction = isProd
 	}
 	config.TLSAllowedHost = TLSAllowedHost
+	user.BuiltInUsername = BuiltInUsername
+	user.BuiltInUserPwd = BuiltInUserPwd
+
 	log.Println("Using following configurations:")
 	log.Println("-------------------------------")
 	log.Println("IsProduction	: ", IsProduction)
@@ -43,6 +53,9 @@ func main() {
 	}
 	defer file.Close()
 	log.SetOutput(io.MultiWriter(os.Stdout, file))
+
+	// Make sure repository cleaned
+	defer user.Repo().Close()
 
 	handlerFunc := http.HandlerFunc(handler.HandleRequest)
 	tlssrv := server.NewTLS(handlerFunc)

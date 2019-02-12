@@ -40,14 +40,13 @@ type serverTest struct {
 
 // Creates new HTTP test
 func new() *serverTest {
-	username, password := user.Repo().Random()
 	return &serverTest{
 		url:            targetURL,
 		method:         http.MethodGet,
 		proxyAddress:   proxyAddress,
 		UsingBasicAuth: true,
-		Username:       username,
-		Password:       password,
+		Username:       user.BuiltInUsername,
+		Password:       user.BuiltInUserPwd,
 	}
 }
 
