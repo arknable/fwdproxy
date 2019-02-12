@@ -23,6 +23,6 @@ func init() {
 	if err == nil {
 		CertCacheDir = path.Join(home, CertCacheDir)
 	}
-	CertPath = path.Join(CertCacheDir, "cert.pem")
-	KeyPath = path.Join(CertCacheDir, "key.pem")
+	CertPath = path.Join(CertCacheDir, "pub.cert")
+	KeyPath = path.Join(CertCacheDir, "key.cert")
 }
