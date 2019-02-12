@@ -13,6 +13,8 @@ import (
 
 // HandleRequest handles requests
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
+	log.Printf("New request to %s [%s]\n", req.URL.String(), req.Method)
+
 	if req.URL.Scheme == "http" {
 		username, password, ok := req.BasicAuth()
 		if !ok || (len(strings.Trim(username, " ")) == 0) {
@@ -50,7 +52,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 	client, err := server.NewClient(config.ProxyAddress)
 	resp, err := client.Do(request)
 	if err != nil {
-		log.Println(err)
+		log.Println("client.Do: ", err)
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
