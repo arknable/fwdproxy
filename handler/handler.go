@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -21,7 +20,6 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 		valid, err := user.Repo().Validate(username, password)
-		fmt.Printf("%s/%s: %v\n", username, password, valid)
 		if err != nil {
 			http.Error(res, "Failed to validate user", http.StatusInternalServerError)
 			log.Println(err)
