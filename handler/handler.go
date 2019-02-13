@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/base64"
 	"io"
 	"log"
 	"net/http"
@@ -14,22 +15,51 @@ import (
 
 // HandleRequest handles requests
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
-	log.Printf("New request: %s\n", req.URL.String())
+	var (
+		fwdMethod string
+		username  string
+		password  string
+		data      []byte
+		err       error
+	)
 
 	// Dump request for log information
-	data, err := httputil.DumpRequest(req, true)
+	data, err = httputil.DumpRequest(req, true)
 	if err != nil {
 		log.Println("httputil.DumpRequest: ", err)
 	} else {
 		log.Printf("Request from client: \n%s\n", string(data))
 	}
 
-	username, password, ok := req.BasicAuth()
-	if !ok || (len(strings.Trim(username, " ")) == 0) {
+	authOK := false
+	if req.Method == http.MethodConnect { // HTTPS
+		fwdMethod = http.MethodGet
+		header := req.Header.Get("Proxy-Authorization")
+		if len(header) > 0 {
+			parts := strings.Split(header, " ")
+			data, err = base64.StdEncoding.DecodeString(parts[1])
+			if err != nil {
+				log.Println("base64.StdEncoding.Decode: ", err)
+				http.Error(res, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			parts = strings.Split(string(data), ":")
+			authOK = true
+			username = parts[0]
+			password = parts[1]
+		}
+		req.URL.Scheme = "https" // Somehow scheme always cleared
+	} else {
+		fwdMethod = req.Method
+		username, password, authOK = req.BasicAuth()
+	}
+
+	if !authOK {
 		log.Println("Unauthorized access, missing authentication")
 		http.Error(res, "Restricted access only", http.StatusUnauthorized)
 		return
 	}
+
 	valid, err := user.Repo().Validate(username, password)
 	if err != nil {
 		http.Error(res, "Failed to validate user", http.StatusInternalServerError)
@@ -42,7 +72,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	request, err := http.NewRequest(req.Method, req.URL.String(), req.Body)
+	request, err := http.NewRequest(fwdMethod, req.URL.String(), req.Body)
 	if err != nil {
 		log.Println("http.NewRequest: ", err)
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -55,6 +85,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 			request.Header.Add(hkey, v)
 		}
 	}
+	request.Header.Del("Proxy-Authorization")
 
 	// Dump request for log information
 	data, err = httputil.DumpRequest(request, true)
