@@ -14,6 +14,7 @@ import (
 
 // HandleRequest handles requests
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
+	log.Println("HandleRequest: ", req.URL.String())
 	isTLS := req.URL.Scheme == "https"
 	if !isTLS {
 		username, password, ok := req.BasicAuth()
