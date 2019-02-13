@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 
 	"github.com/arknable/fwdproxy/config"
@@ -13,7 +14,8 @@ import (
 
 // HandleRequest handles requests
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
-	if req.URL.Scheme == "http" {
+	isTLS := req.URL.Scheme == "https"
+	if !isTLS {
 		username, password, ok := req.BasicAuth()
 		if !ok || (len(strings.Trim(username, " ")) == 0) {
 			http.Error(res, "Restricted access only", http.StatusUnauthorized)
@@ -33,9 +35,13 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		req.URL.Scheme = "https" // Somehow Scheme becomes empty on TLS
 	}
 
-	log.Printf("New request to %s [%s]\n", req.URL.String(), req.Method)
+	log.Printf("New request: %s [%s]\n", req.URL.String(), req.Method)
 
-	request, err := http.NewRequest(req.Method, req.URL.String(), req.Body)
+	method := req.Method
+	if isTLS {
+		method = http.MethodConnect
+	}
+	request, err := http.NewRequest(method, req.URL.String(), req.Body)
 	if err != nil {
 		log.Println("http.NewRequest: ", err)
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -47,6 +53,14 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		for _, v := range hval {
 			request.Header.Add(hkey, v)
 		}
+	}
+
+	// Dump request for log information
+	data, err := httputil.DumpRequest(request, true)
+	if err != nil {
+		log.Println("httputil.DumpRequest: ", err)
+	} else {
+		log.Println(string(data))
 	}
 
 	client, err := server.NewClient(config.ProxyAddress)
@@ -64,6 +78,15 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 	res.WriteHeader(resp.StatusCode)
+
+	// Dump response for log information
+	data, err = httputil.DumpResponse(resp, true)
+	if err != nil {
+		log.Println("httputil.DumpResponse: ", err)
+	} else {
+		log.Println(string(data))
+	}
+
 	_, err = io.Copy(res, resp.Body)
 	if err != nil {
 		log.Println(err)
