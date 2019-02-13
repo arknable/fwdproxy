@@ -3,21 +3,16 @@ package server
 import (
 	"crypto/tls"
 	"net/http"
-	"net/url"
 
 	"github.com/arknable/fwdproxy/config"
 )
 
-// NewClient creates HTTP/HTTPS client given its proxy address
+// NewClient creates HTTP/HTTPS client given its proxy address.
+// Note: Transport.Proxy only support HTTP and SOCKS5 so we don't use it anymore:
+// https://go-review.googlesource.com/c/go/+/66010/
 func NewClient(proxyAddr string) (*http.Client, error) {
-	proxyURL, err := url.Parse(proxyAddr)
-	if err != nil {
-		return nil, err
-	}
-	proxyURL.User = url.UserPassword(config.ProxyUsername, config.ProxyPassword)
 	client := &http.Client{
 		Transport: &http.Transport{
-			Proxy: http.ProxyURL(proxyURL),
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: !config.IsProduction,
 			},

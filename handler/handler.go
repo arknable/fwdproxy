@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -85,7 +86,10 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 			request.Header.Add(hkey, v)
 		}
 	}
-	request.Header.Del("Proxy-Authorization")
+
+	cred := fmt.Sprintf("%s:%s", config.ProxyUsername, config.ProxyPassword)
+	credEnc := base64.StdEncoding.EncodeToString([]byte(cred))
+	request.Header.Set("Proxy-Authorization", fmt.Sprintf("Basic %s", credEnc))
 
 	// Dump request for log information
 	data, err = httputil.DumpRequest(request, true)
