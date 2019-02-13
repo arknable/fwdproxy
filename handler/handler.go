@@ -14,7 +14,15 @@ import (
 
 // HandleRequest handles requests
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
-	log.Printf("New request: %s", req.URL.String())
+	log.Printf("New request: %s\n", req.URL.String())
+
+	// Dump request for log information
+	data, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		log.Println("httputil.DumpRequest: ", err)
+	} else {
+		log.Printf("Request from client: \n%s\n", string(data))
+	}
 
 	username, password, ok := req.BasicAuth()
 	if !ok || (len(strings.Trim(username, " ")) == 0) {
@@ -49,11 +57,11 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// Dump request for log information
-	data, err := httputil.DumpRequest(request, true)
+	data, err = httputil.DumpRequest(request, true)
 	if err != nil {
-		log.Println("httputil.DumpRequest: ", err)
+		log.Println("httputil.DumpRequest(ext): ", err)
 	} else {
-		log.Println(string(data))
+		log.Printf("Request to ext proxy: \n%s\n", string(data))
 	}
 
 	client, err := server.NewClient(config.ProxyAddress)
@@ -77,7 +85,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Println("httputil.DumpResponse: ", err)
 	} else {
-		log.Println(string(data))
+		log.Printf("Response from ext proxy: \n%s\n", string(data))
 	}
 
 	_, err = io.Copy(res, resp.Body)
