@@ -14,9 +14,9 @@ import (
 
 // HandleRequest handles requests
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
-	log.Println("HandleRequest: ", req.URL.String())
 	isTLS := req.URL.Scheme == "https"
 	if !isTLS {
+		log.Printf("HandleRequest: [%s] %s\n", req.URL.Scheme, req.URL.String())
 		username, password, ok := req.BasicAuth()
 		if !ok || (len(strings.Trim(username, " ")) == 0) {
 			http.Error(res, "Restricted access only", http.StatusUnauthorized)
@@ -34,6 +34,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		}
 	} else {
 		req.URL.Scheme = "https" // Somehow Scheme becomes empty on TLS
+		log.Printf("HandleRequest: [%s] %s\n", req.URL.Scheme, req.URL.String())
 	}
 
 	log.Printf("New request: %s [%s]\n", req.URL.String(), req.Method)
