@@ -14,36 +14,24 @@ import (
 
 // HandleRequest handles requests
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
-	isTLS := req.URL.Scheme != "http"
-	if !isTLS {
-		log.Printf("HandleRequest: [http] %s\n", req.URL.String())
-		username, password, ok := req.BasicAuth()
-		if !ok || (len(strings.Trim(username, " ")) == 0) {
-			http.Error(res, "Restricted access only", http.StatusUnauthorized)
-			return
-		}
-		valid, err := user.Repo().Validate(username, password)
-		if err != nil {
-			http.Error(res, "Failed to validate user", http.StatusInternalServerError)
-			log.Println(err)
-			return
-		}
-		if !valid {
-			http.Error(res, "You have no access to do a request", http.StatusForbidden)
-			return
-		}
-	} else {
-		req.URL.Scheme = "https" // Somehow Scheme becomes empty on TLS
-		log.Printf("HandleRequest: [https] %s\n", req.URL.String())
+	username, password, ok := req.BasicAuth()
+	if !ok || (len(strings.Trim(username, " ")) == 0) {
+		http.Error(res, "Restricted access only", http.StatusUnauthorized)
+		return
+	}
+	valid, err := user.Repo().Validate(username, password)
+	if err != nil {
+		http.Error(res, "Failed to validate user", http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+	if !valid {
+		http.Error(res, "You have no access to do a request", http.StatusForbidden)
+		return
 	}
 
 	log.Printf("New request: %s [%s]\n", req.URL.String(), req.Method)
-
-	method := req.Method
-	if isTLS {
-		method = http.MethodConnect
-	}
-	request, err := http.NewRequest(method, req.URL.String(), req.Body)
+	request, err := http.NewRequest(req.Method, req.URL.String(), req.Body)
 	if err != nil {
 		log.Println("http.NewRequest: ", err)
 		http.Error(res, err.Error(), http.StatusInternalServerError)
