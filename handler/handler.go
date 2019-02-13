@@ -80,7 +80,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(resp.StatusCode)
 
 	// Dump response for log information
-	data, err = httputil.DumpResponse(resp, true)
+	data, err = httputil.DumpResponse(resp, false)
 	if err != nil {
 		log.Println("httputil.DumpResponse: ", err)
 	} else {
