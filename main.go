@@ -29,6 +29,14 @@ var (
 )
 
 func main() {
+	// Dump log to standard output and file
+	file, err := os.OpenFile("proxy.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("Can't open log file: %v", err)
+	}
+	defer file.Close()
+	log.SetOutput(io.MultiWriter(os.Stdout, file))
+
 	// Check config overrides
 	isProd, err := strconv.ParseBool(IsProduction)
 	if err != nil {
@@ -45,14 +53,6 @@ func main() {
 	log.Println("IsProduction	: ", IsProduction)
 	log.Println("TLSAllowedHost	: ", TLSAllowedHost)
 	log.Println()
-
-	// Dump log to standard output and file
-	file, err := os.OpenFile("proxy.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("Can't open log file: %v", err)
-	}
-	defer file.Close()
-	log.SetOutput(io.MultiWriter(os.Stdout, file))
 
 	// Make sure repository cleaned
 	defer user.Repo().Close()
