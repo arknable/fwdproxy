@@ -14,8 +14,11 @@ import (
 
 // HandleRequest handles requests
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
+	log.Printf("New request: %s", req.URL.String())
+
 	username, password, ok := req.BasicAuth()
 	if !ok || (len(strings.Trim(username, " ")) == 0) {
+		log.Println("Unauthorized access, missing authentication")
 		http.Error(res, "Restricted access only", http.StatusUnauthorized)
 		return
 	}
@@ -26,11 +29,11 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if !valid {
+		log.Printf("Invalid authentication: %s/%s\n", username, password)
 		http.Error(res, "You have no access to do a request", http.StatusForbidden)
 		return
 	}
 
-	log.Printf("New request: %s [%s]\n", req.URL.String(), req.Method)
 	request, err := http.NewRequest(req.Method, req.URL.String(), req.Body)
 	if err != nil {
 		log.Println("http.NewRequest: ", err)
