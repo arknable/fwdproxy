@@ -1,13 +1,16 @@
 package main
 
 import (
+	"net/http"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/arknable/fwdproxy/config"
 	"github.com/arknable/fwdproxy/env"
+	"github.com/arknable/fwdproxy/handler"
 	plog "github.com/arknable/fwdproxy/log"
+	"github.com/arknable/fwdproxy/server"
 	"github.com/arknable/fwdproxy/user"
 )
 
@@ -62,7 +65,7 @@ func main() {
 	}
 	defer repo.Close()
 
-	// handlerFunc := http.HandlerFunc(handler.HandleRequest)
+	handlerFunc := http.HandlerFunc(handler.HandleRequest)
 	// tlssrv := server.NewTLS(handlerFunc)
 	// go func() {
 	// 	log.Printf("Starting HTTPS Server at %s ...\n", tlssrv.Addr)
@@ -71,9 +74,9 @@ func main() {
 	// 	}
 	// }()
 
-	// srv := server.New(handlerFunc)
-	// log.Printf("Starting HTTP Server at %s ...\n", srv.Addr)
-	// if err := srv.ListenAndServe(); err != nil {
-	// 	log.Fatal("HTTP Error: ", err)
-	// }
+	srv := server.New(handlerFunc)
+	log.Infof("Listening at %s", srv.Addr)
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
 }
