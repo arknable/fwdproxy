@@ -36,27 +36,33 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 // Format key and value to output message
 func (f *TextFormatter) format(entry *logrus.Entry, key string, value interface{}) string {
-	head := f.colorized(entry, fmt.Sprintf("%20s:", key))
+	head := color.LightGray(fmt.Sprintf("%20s:", key))
 	val := color.LightGray(fmt.Sprintf("%v", value))
+	isDebugAndLower := (entry.Level == logrus.DebugLevel) || (entry.Level == logrus.TraceLevel)
+
+	if (strings.ToUpper(entry.Level.String()) == strings.ToUpper(key)) || isDebugAndLower {
+		head = f.colorized(entry, fmt.Sprintf("%20s:", key))
+	}
+
+	if isDebugAndLower {
+		val = f.colorized(entry, fmt.Sprintf("%v", value))
+	}
+
 	return fmt.Sprintf("%s %s\n", head, val)
 }
 
 // Set color of the string
 func (f *TextFormatter) colorized(entry *logrus.Entry, s string) string {
+	result := color.BDarkGray(s)
 	switch entry.Level {
-	case logrus.PanicLevel:
-	case logrus.FatalLevel:
-		return color.GRed(s)
-	case logrus.ErrorLevel:
-		return color.BRed(s)
+	case logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel:
+		result = color.BRed(s)
 	case logrus.WarnLevel:
-		return color.BYellow(s)
+		result = color.BYellow(s)
 	case logrus.InfoLevel:
-		return color.BLightGray(s)
-	case logrus.DebugLevel:
-		return color.BDarkGray(s)
-	case logrus.TraceLevel:
-		return color.BPurple(s)
+		result = color.BBlue(s)
+	case logrus.DebugLevel, logrus.TraceLevel:
+		result = color.BDarkGray(s)
 	}
-	return color.BDarkGray(s)
+	return result
 }
