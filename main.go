@@ -36,7 +36,9 @@ func main() {
 	log.SetLevel(log.DebugLevel)
 
 	// Init environment
-	env.Initialize()
+	if err := env.Initialize(); err != nil {
+		log.Fatal(err)
+	}
 
 	// Check config overrides
 	isProd, err := strconv.ParseBool(IsProduction)
