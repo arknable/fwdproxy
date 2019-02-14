@@ -1,7 +1,6 @@
 package user
 
 import (
-	"log"
 	"path"
 	"time"
 
@@ -27,7 +26,6 @@ func (r *BoltRepository) Initialize() error {
 		return err
 	}
 	r.db = db
-	log.Printf("Database initialized at: %s\n", path)
 
 	tx, err := r.db.Begin(true)
 	if err != nil {
