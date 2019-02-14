@@ -23,11 +23,14 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		builder.WriteString(f.format(entry, k, v))
 	}
 
-	if ((entry.Level == logrus.PanicLevel) ||
-		(entry.Level == logrus.FatalLevel) ||
-		(entry.Level == logrus.ErrorLevel)) &&
-		(entry.Caller != nil) {
-		builder.WriteString(f.format(entry, "source", fmt.Sprintf("%s:%v", entry.Caller.File, entry.Caller.Line)))
+	if entry.Caller != nil {
+		if (entry.Level == logrus.PanicLevel) ||
+			(entry.Level == logrus.FatalLevel) ||
+			(entry.Level == logrus.ErrorLevel) {
+			builder.WriteString(f.format(entry, "source", fmt.Sprintf("%s:%v", entry.Caller.File, entry.Caller.Line)))
+		} else {
+			builder.WriteString(f.format(entry, "function", entry.Caller.Function))
+		}
 	}
 
 	builder.WriteString("\n")
