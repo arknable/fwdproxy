@@ -17,13 +17,17 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	timeString := entry.Time.Format("02 January 2006 15:04:05")
 	level := strings.ToUpper(entry.Level.String())
 	builder.WriteString(f.format(entry, level, f.colorized(entry, entry.Message)))
-	if entry.Caller != nil {
-		builder.WriteString(f.format(entry, "source", fmt.Sprintf("%s:%v", entry.Caller.File, entry.Caller.Line)))
-	}
 	builder.WriteString(f.format(entry, "time", timeString))
 
 	for k, v := range entry.Data {
 		builder.WriteString(f.format(entry, k, v))
+	}
+
+	if ((entry.Level == logrus.PanicLevel) ||
+		(entry.Level == logrus.FatalLevel) ||
+		(entry.Level == logrus.ErrorLevel)) &&
+		(entry.Caller != nil) {
+		builder.WriteString(f.format(entry, "source", fmt.Sprintf("%s:%v", entry.Caller.File, entry.Caller.Line)))
 	}
 
 	builder.WriteString("\n")
@@ -32,7 +36,7 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 // Format key and value to output message
 func (f *TextFormatter) format(entry *logrus.Entry, key string, value interface{}) string {
-	head := f.colorized(entry, fmt.Sprintf("[%20s]", key))
+	head := f.colorized(entry, fmt.Sprintf("%20s:", key))
 	val := color.LightGray(fmt.Sprintf("%v", value))
 	return fmt.Sprintf("%s %s\n", head, val)
 }
