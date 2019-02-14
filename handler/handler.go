@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/base64"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -79,17 +78,14 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	request.Header.Set("Host", req.Host)
-	request.Header.Set("X-Forwarded-For", req.RemoteAddr)
-	for hkey, hval := range req.Header {
-		for _, v := range hval {
-			request.Header.Add(hkey, v)
-		}
-	}
-
-	cred := fmt.Sprintf("%s:%s", config.ProxyUsername, config.ProxyPassword)
-	credEnc := base64.StdEncoding.EncodeToString([]byte(cred))
-	request.Header.Set("Proxy-Authorization", fmt.Sprintf("Basic %s", credEnc))
+	// request.Header.Set("Host", req.Host)
+	// request.Header.Set("X-Forwarded-For", req.RemoteAddr)
+	// for hkey, hval := range req.Header {
+	// 	for _, v := range hval {
+	// 		request.Header.Add(hkey, v)
+	// 	}
+	// }
+	// request.Header.Add("X-Forwarded-For", req.RemoteAddr)
 
 	// Dump request for log information
 	data, err = httputil.DumpRequest(request, true)

@@ -10,6 +10,9 @@ var (
 	// CertCacheDir is certificate caching root folder
 	CertCacheDir string
 
+	// CACertPath is path to intermediary certificate file
+	CACertPath string
+
 	// CertPath is path to certificate file
 	CertPath string
 
@@ -23,6 +26,7 @@ func init() {
 	if err == nil {
 		CertCacheDir = path.Join(home, CertCacheDir)
 	}
-	CertPath = path.Join(CertCacheDir, "pub.crt")
-	KeyPath = path.Join(CertCacheDir, "key.crt")
+	CACertPath = path.Join(CertCacheDir, "ca.pem")
+	CertPath = path.Join(CertCacheDir, "cert.pem")
+	KeyPath = path.Join(CertCacheDir, "key.pem")
 }
