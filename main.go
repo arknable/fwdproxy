@@ -33,6 +33,7 @@ func main() {
 	// log.SetOutput(io.MultiWriter(os.Stdout, file))
 	log.SetReportCaller(true)
 	log.SetFormatter(&plog.TextFormatter{})
+	log.SetLevel(log.DebugLevel)
 
 	// Init environment
 	env.Initialize()
@@ -52,8 +53,12 @@ func main() {
 		"BuiltInUserPwd":  BuiltInUserPwd,
 	}).Info("Configuration overrides")
 
-	// Make sure repository cleaned
-	defer user.Repo().Close()
+	// Init repository
+	repo, err := user.Initialize()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer repo.Close()
 
 	// handlerFunc := http.HandlerFunc(handler.HandleRequest)
 	// tlssrv := server.NewTLS(handlerFunc)

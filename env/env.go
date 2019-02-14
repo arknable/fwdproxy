@@ -12,23 +12,32 @@ import (
 var homePath string
 
 // Initialize performs initialization
-func Initialize() {
+func Initialize() error {
 	folderName := ".fwdproxy"
-	homePath, err := homedir.Dir()
+	hpath, err := homedir.Dir()
 	if err != nil {
 		log.WithError(err).Error("Failed to find user's Home path.")
 
 		workPath, err := os.Getwd()
 		if err != nil {
-			homePath = folderName
+			hpath = folderName
 			log.WithError(err).Error("Unknown working path, using active path.")
 		} else {
-			homePath = path.Join(workPath, folderName)
+			hpath = path.Join(workPath, folderName)
 		}
 	} else {
-		homePath = path.Join(homePath, folderName)
+		hpath = path.Join(hpath, folderName)
 	}
+	homePath = hpath
+	_, err = os.Stat(homePath)
+	if os.IsNotExist(err) {
+		if err = os.MkdirAll(homePath, os.ModePerm); err != nil {
+			return err
+		}
+	}
+
 	log.WithField("path", homePath).Info("Using path as Home")
+	return nil
 }
 
 // HomePath returns path to app's home folder

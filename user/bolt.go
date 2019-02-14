@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/arknable/fwdproxy/env"
+	log "github.com/sirupsen/logrus"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -20,12 +21,13 @@ type BoltRepository struct {
 
 // Initialize implements Repository.Initialize
 func (r *BoltRepository) Initialize() error {
-	path := path.Join(env.HomePath(), "users.db")
-	db, err := bolt.Open(path, 0600, &bolt.Options{Timeout: 5 * time.Second})
+	dbPath := path.Join(env.HomePath(), "users.db")
+	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		return err
 	}
 	r.db = db
+	log.WithField("path", dbPath).Info("Using path as DB path")
 
 	tx, err := r.db.Begin(true)
 	if err != nil {

@@ -1,7 +1,5 @@
 package user
 
-import "log"
-
 var (
 	// BuiltInUsername is username that inserted the first time
 	// database initialized.
@@ -14,11 +12,13 @@ var (
 	repo Repository
 )
 
-func init() {
+// Initialize performs initialization
+func Initialize() (Repository, error) {
 	repo = new(BoltRepository)
 	if err := repo.Initialize(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+	return repo, nil
 }
 
 // Repo returns instance of Repository
