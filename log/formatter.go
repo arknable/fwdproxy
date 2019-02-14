@@ -8,6 +8,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Special fields that might have lengthy text.
+const (
+	// FieldData is special field to put a data.
+	FieldData = "data"
+
+	// FieldError is special field used by logrus
+	// to display error message.
+	FieldError = "error"
+)
+
 // TextFormatter is logrus text formatter
 type TextFormatter struct{}
 
@@ -19,10 +29,6 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	builder.WriteString(f.format(entry, level, f.colorized(entry, entry.Message)))
 	builder.WriteString(f.format(entry, "time", timeString))
 
-	for k, v := range entry.Data {
-		builder.WriteString(f.format(entry, k, v))
-	}
-
 	if entry.Caller != nil {
 		if (entry.Level == logrus.PanicLevel) ||
 			(entry.Level == logrus.FatalLevel) ||
@@ -30,6 +36,20 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 			builder.WriteString(f.format(entry, "source", fmt.Sprintf("%s:%v", entry.Caller.File, entry.Caller.Line)))
 		} else {
 			builder.WriteString(f.format(entry, "function", entry.Caller.Function))
+		}
+	}
+
+	for k, v := range entry.Data {
+		if (k != FieldData) && (k != FieldError) {
+			builder.WriteString(f.format(entry, k, v))
+		}
+	}
+
+	fields := []string{FieldData, FieldError}
+	for _, k := range fields {
+		v, ok := entry.Data[k]
+		if ok {
+			builder.WriteString(f.format(entry, FieldData, v))
 		}
 	}
 
