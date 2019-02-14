@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/arknable/fwdproxy/config"
+	"github.com/arknable/fwdproxy/env"
 	plog "github.com/arknable/fwdproxy/log"
 	"github.com/arknable/fwdproxy/user"
 )
@@ -32,6 +33,9 @@ func main() {
 	// log.SetOutput(io.MultiWriter(os.Stdout, file))
 	log.SetReportCaller(true)
 	log.SetFormatter(&plog.TextFormatter{})
+
+	// Init environment
+	env.Initialize()
 
 	// Check config overrides
 	isProd, err := strconv.ParseBool(IsProduction)

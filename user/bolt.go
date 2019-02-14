@@ -4,7 +4,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/arknable/fwdproxy/config"
+	"github.com/arknable/fwdproxy/env"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -20,7 +20,7 @@ type BoltRepository struct {
 
 // Initialize implements Repository.Initialize
 func (r *BoltRepository) Initialize() error {
-	path := path.Join(config.HomePath(), "fwdproxy.db")
+	path := path.Join(env.HomePath(), "users.db")
 	db, err := bolt.Open(path, 0600, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		return err
