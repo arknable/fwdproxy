@@ -16,7 +16,6 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var builder strings.Builder
 	timeString := entry.Time.Format("02 January 2006 15:04:05")
 	level := strings.ToUpper(entry.Level.String())
-	builder.WriteString(f.format(entry, level, f.colorized(entry, entry.Message)))
 	builder.WriteString(f.format(entry, "time", timeString))
 
 	for k, v := range entry.Data {
@@ -33,6 +32,7 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		}
 	}
 
+	builder.WriteString(f.format(entry, level, f.colorized(entry, entry.Message)))
 	builder.WriteString("\n")
 	return []byte(builder.String()), nil
 }
