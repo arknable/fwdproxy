@@ -78,14 +78,13 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// request.Header.Set("Host", req.Host)
-	// request.Header.Set("X-Forwarded-For", req.RemoteAddr)
-	// for hkey, hval := range req.Header {
-	// 	for _, v := range hval {
-	// 		request.Header.Add(hkey, v)
-	// 	}
-	// }
-	// request.Header.Add("X-Forwarded-For", req.RemoteAddr)
+	request.Header.Set("Host", req.Host)
+	request.Header.Set("X-Forwarded-For", req.RemoteAddr)
+	for hkey, hval := range req.Header {
+		for _, v := range hval {
+			request.Header.Add(hkey, v)
+		}
+	}
 
 	// Dump request for log information
 	data, err = httputil.DumpRequest(request, true)
