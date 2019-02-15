@@ -31,7 +31,7 @@ func handleHTTP(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	mylog.WithRequest(req).Info("Incoming request")
+	mylog.WithRequest(req).Info("Incoming HTTP request")
 
 	credFields := log.Fields{
 		"username": username,
