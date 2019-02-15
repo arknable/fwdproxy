@@ -2,10 +2,11 @@ package server
 
 import (
 	"crypto/tls"
-	"log"
 	"net/http"
 	"net/url"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
