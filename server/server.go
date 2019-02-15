@@ -19,11 +19,3 @@ func New(handler http.Handler) *http.Server {
 		Handler:      handler,
 	}
 }
-
-// NewTLS creates an HTTPS server
-// func NewTLS(handler http.Handler) *http.Server {
-// 	srv := New(handler)
-// 	srv.Addr = fmt.Sprintf(":%s", config.TLSPort)
-// 	srv.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
-// 	return srv
-// }

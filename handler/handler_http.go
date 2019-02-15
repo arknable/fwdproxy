@@ -4,22 +4,33 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/arknable/fwdproxy/config"
 	mylog "github.com/arknable/fwdproxy/log"
 	"github.com/arknable/fwdproxy/server"
 	"github.com/arknable/fwdproxy/user"
 	log "github.com/sirupsen/logrus"
 )
 
-// HandleRequest handles requests
-func HandleRequest(res http.ResponseWriter, req *http.Request) {
+// HandleHTTP handles HTTP requests
+func HandleHTTP(res http.ResponseWriter, req *http.Request) {
+	authExists := true
 	username, password, ok := req.BasicAuth()
 	if !ok {
+		// Check if user uses proxy authentication
+		proxUser, proxPwd, err := parseProxyAuth(req)
+		if err != nil {
+			authExists = false
+		} else {
+			username = proxUser
+			password = proxPwd
+		}
+	}
+	if !authExists {
 		msg := "Unauthorized request"
 		http.Error(res, msg, http.StatusUnauthorized)
 		mylog.WithRequest(req).Warning(msg)
 		return
 	}
+
 	mylog.WithRequest(req).Info("Incoming request")
 
 	credFields := log.Fields{
@@ -40,18 +51,18 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 	}
 	log.WithFields(credFields).Info("Authenticated")
 
-	method := req.Method
-	if req.TLS != nil {
-		method = http.MethodGet
-	}
-	request, err := http.NewRequest(method, req.URL.String(), req.Body)
+	request, err := http.NewRequest(req.Method, req.URL.String(), req.Body)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		log.Error(err)
 		return
 	}
-	request.Header.Set("Host", req.Host)
+
 	for key, val := range req.Header {
+		if key == "Proxy-Authorization" {
+			continue
+		}
+
 		for _, v := range val {
 			request.Header.Add(key, v)
 		}
@@ -59,7 +70,7 @@ func HandleRequest(res http.ResponseWriter, req *http.Request) {
 
 	mylog.WithRequest(request).Info("Forwarded request")
 
-	client, err := server.NewClient(config.ProxyAddress)
+	client := &http.Client{Transport: server.Transport()}
 	resp, err := client.Do(request)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)

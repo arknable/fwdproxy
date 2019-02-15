@@ -65,16 +65,7 @@ func main() {
 	}
 	defer repo.Close()
 
-	handlerFunc := http.HandlerFunc(handler.HandleRequest)
-	// tlssrv := server.NewTLS(handlerFunc)
-	// go func() {
-	// 	log.Printf("Starting HTTPS Server at %s ...\n", tlssrv.Addr)
-	// 	if err := tlssrv.ListenAndServeTLS(config.CertPath, config.KeyPath); err != nil {
-	// 		log.Fatal("HTTPS Error: ", err)
-	// 	}
-	// }()
-
-	srv := server.New(handlerFunc)
+	srv := server.New(http.HandlerFunc(handler.HandleHTTP))
 	log.Infof("Listening at %s", srv.Addr)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
