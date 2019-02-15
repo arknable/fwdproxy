@@ -1,7 +1,6 @@
 package server
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"time"
@@ -23,7 +22,6 @@ func New(handler http.Handler) *http.Server {
 		WriteTimeout: 20 * time.Second,
 		IdleTimeout:  120 * time.Second,
 		Handler:      handler,
-		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 }
 

@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 
 	mylog "github.com/arknable/fwdproxy/log"
+	"github.com/arknable/fwdproxy/server"
 	"github.com/arknable/fwdproxy/user"
 	log "github.com/sirupsen/logrus"
 )
@@ -37,4 +39,49 @@ func handleTLS(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.WithFields(credFields).Info("Authenticated")
+
+	req.URL.Scheme = "https"
+	request, err := http.NewRequest(http.MethodGet, req.URL.String(), req.Body)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		log.Error(err)
+		return
+	}
+
+	for key, val := range req.Header {
+		if key == "Proxy-Authorization" {
+			continue
+		}
+
+		for _, v := range val {
+			request.Header.Add(key, v)
+		}
+	}
+
+	mylog.WithRequest(request).Info("Forwarded HTTPS request")
+
+	client := &http.Client{Transport: server.TLSTransport()}
+	resp, err := client.Do(request)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		log.Error(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	mylog.WithResponse(resp).Info("Returned HTTPS response")
+
+	for key, val := range resp.Header {
+		for _, v := range val {
+			res.Header().Add(key, v)
+		}
+	}
+	res.WriteHeader(resp.StatusCode)
+
+	_, err = io.Copy(res, resp.Body)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		log.Error(err)
+		return
+	}
 }

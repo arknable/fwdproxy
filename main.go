@@ -65,13 +65,13 @@ func main() {
 	}
 	defer repo.Close()
 
-	go func() {
-		tlssrv := server.NewTLS(http.HandlerFunc(handler.HandleRequest))
-		log.Infof("Listening at %s", tlssrv.Addr)
-		if err := tlssrv.ListenAndServeTLS(config.CertPath, config.KeyPath); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	// go func() {
+	// 	tlssrv := server.NewTLS(http.HandlerFunc(handler.HandleRequest))
+	// 	log.Infof("Listening at %s", tlssrv.Addr)
+	// 	if err := tlssrv.ListenAndServeTLS(config.CertPath, config.KeyPath); err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// }()
 
 	srv := server.New(http.HandlerFunc(handler.HandleRequest))
 	log.Infof("Listening at %s", srv.Addr)
