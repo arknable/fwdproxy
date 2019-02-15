@@ -65,7 +65,7 @@ func main() {
 	}
 	defer repo.Close()
 
-	srv := server.New(http.HandlerFunc(handler.HandleHTTP))
+	srv := server.New(http.HandlerFunc(handler.HandleRequest))
 	log.Infof("Listening at %s", srv.Addr)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)

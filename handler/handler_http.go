@@ -10,8 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// HandleHTTP handles HTTP requests
-func HandleHTTP(res http.ResponseWriter, req *http.Request) {
+// Handles HTTP requests
+func handleHTTP(res http.ResponseWriter, req *http.Request) {
 	authExists := true
 	username, password, ok := req.BasicAuth()
 	if !ok {
