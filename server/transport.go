@@ -3,8 +3,10 @@ package server
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path"
 	"sync"
 
 	"github.com/arknable/fwdproxy/config"
@@ -52,18 +54,32 @@ func TLSTransport() *http.Transport {
 		if err != nil {
 			log.Fatal(err)
 		}
-		certPool, err := x509.SystemCertPool()
-		if err != nil {
-			log.Fatal(err)
+
+		var certPool *x509.CertPool
+		if config.IsProduction {
+			certPool, err = x509.SystemCertPool()
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			caCert, err := ioutil.ReadFile(path.Join(config.CertCacheDir, "ca.pem"))
+			if err != nil {
+				log.Fatal(err)
+			}
+			certPool = x509.NewCertPool()
+			certPool.AppendCertsFromPEM(caCert)
 		}
+
 		config := &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			RootCAs:      certPool,
+			Certificates:       []tls.Certificate{cert},
+			RootCAs:            certPool,
+			InsecureSkipVerify: !config.IsProduction,
 		}
 		config.BuildNameToCertificate()
 
 		tlsTransport = &http.Transport{
 			TLSClientConfig: config,
+			TLSNextProto:    make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
 		}
 	})
 	return tlsTransport

@@ -73,7 +73,7 @@ func main() {
 
 	srv := server.New(http.HandlerFunc(handler.HandleRequest))
 	log.Infof("Listening at %s", srv.Addr)
-	if err := srv.ListenAndServe(); err != nil {
+	if err := srv.ListenAndServeTLS(config.CertPath, config.KeyPath); err != nil {
 		log.Fatal(err)
 	}
 }
