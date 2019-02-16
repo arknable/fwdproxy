@@ -62,12 +62,9 @@ func TLSTransport() *http.Transport {
 		}
 		config.BuildNameToCertificate()
 
-		instance, err := createTransport(ProxyAddress)
-		if err != nil {
-			log.Fatal(err)
+		tlsTransport = &http.Transport{
+			TLSClientConfig: config,
 		}
-		tlsTransport = instance
-		tlsTransport.TLSClientConfig = config
 	})
 	return tlsTransport
 }
