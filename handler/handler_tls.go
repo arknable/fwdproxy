@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"encoding/base64"
 	"io"
+	"net"
 	"net/http"
 
 	mylog "github.com/arknable/fwdproxy/log"
@@ -41,26 +43,28 @@ func handleTLS(res http.ResponseWriter, req *http.Request) {
 	log.WithFields(credFields).Info("Authenticated")
 
 	req.URL.Scheme = "https"
-	request, err := http.NewRequest(http.MethodGet, req.URL.String(), req.Body)
+
+	request, err := http.NewRequest(http.MethodConnect, server.ProxyAddress, req.Body)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		log.Error(err)
 		return
 	}
-
 	for key, val := range req.Header {
-		if key == "Proxy-Authorization" {
-			continue
-		}
-
 		for _, v := range val {
 			request.Header.Add(key, v)
 		}
 	}
+	request.Header.Del("Proxy-Authorization")
+	request.Header.Del("Proxy-Connection")
+	request.Header.Set("Host", req.URL.String())
+
+	cred := base64.StdEncoding.EncodeToString([]byte(net.JoinHostPort(server.ProxyUsername, server.ProxyPassword)))
+	request.Header.Add("Proxy-Authorization", "Basic "+cred)
 
 	mylog.WithRequest(request).Info("Forwarded HTTPS request")
 
-	client := &http.Client{Transport: server.TLSTransport()}
+	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -68,7 +72,15 @@ func handleTLS(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
+	mylog.WithResponse(resp).Info("Returned HTTPS response")
 
+	resp, err = client.Get(req.URL.String())
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		log.Error(err)
+		return
+	}
+	defer resp.Body.Close()
 	mylog.WithResponse(resp).Info("Returned HTTPS response")
 
 	for key, val := range resp.Header {
