@@ -16,7 +16,6 @@ func copyHeader(src, dest http.Header) {
 
 // Copy response from src to dest
 func copyResponse(src *http.Response, dest http.ResponseWriter) error {
-	dest.WriteHeader(src.StatusCode)
 	copyHeader(src.Header, dest.Header())
 	_, err := io.Copy(dest, src.Body)
 	return err

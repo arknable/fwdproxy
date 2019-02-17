@@ -2,59 +2,41 @@ package handler
 
 import (
 	"encoding/base64"
-	"io"
 	"net"
 	"net/http"
 
 	mylog "github.com/arknable/fwdproxy/log"
 	"github.com/arknable/fwdproxy/server"
-	"github.com/arknable/fwdproxy/user"
 	log "github.com/sirupsen/logrus"
 )
 
 // Handles TLS tunneling
 func handleTLS(res http.ResponseWriter, req *http.Request) {
-	username, password, err := proxyAuth(req)
-	if err != nil {
-		msg := "Unauthorized request"
-		http.Error(res, msg, http.StatusUnauthorized)
-		mylog.WithRequest(req).Warning(msg)
-		return
-	}
+	req.URL.Scheme = "https" // If method is CONNECT, URL.Scheme usually cleared.
 
-	mylog.WithRequest(req).Info("Incoming HTTPS request")
-
+	username, password, err := validateRequest(req)
 	credFields := log.Fields{
 		"username": username,
 		"pasword":  password,
 	}
-	valid, err := user.Repo().Validate(username, password)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.WithFields(credFields).Error(err)
-		return
-	}
-	if !valid {
-		msg := "Forbidden request"
-		http.Error(res, msg, http.StatusForbidden)
-		log.WithFields(credFields).Warning(msg)
-		return
-	}
-	log.WithFields(credFields).Info("Authenticated")
+		if err == ErrInvalidAuth {
+			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			log.WithFields(credFields).Warning(http.StatusText(http.StatusUnauthorized))
+			return
+		}
 
-	req.URL.Scheme = "https"
+		internalError(res, req, err)
+		return
+	}
+	mylog.WithRequest(req).WithFields(credFields).Info("Authenticated")
 
 	request, err := http.NewRequest(http.MethodConnect, server.ProxyAddress, req.Body)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.Error(err)
+		internalError(res, req, err)
 		return
 	}
-	for key, val := range req.Header {
-		for _, v := range val {
-			request.Header.Add(key, v)
-		}
-	}
+	copyHeader(req.Header, request.Header)
 	request.Header.Del("Proxy-Authorization")
 	request.Header.Del("Proxy-Connection")
 	request.Header.Set("Host", req.URL.String())
@@ -62,38 +44,27 @@ func handleTLS(res http.ResponseWriter, req *http.Request) {
 	cred := base64.StdEncoding.EncodeToString([]byte(net.JoinHostPort(server.ProxyUsername, server.ProxyPassword)))
 	request.Header.Add("Proxy-Authorization", "Basic "+cred)
 
-	mylog.WithRequest(request).Info("Forwarded HTTPS request")
+	mylog.WithRequest(request).Info("Forwarded request")
 
 	client := server.NewClient()
 	resp, err := client.Do(request)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.Error(err)
+		log.Error("client.Do")
+		internalError(res, req, err)
 		return
 	}
 	defer resp.Body.Close()
-	mylog.WithResponse(resp).Info("Returned HTTPS response")
 
 	resp, err = client.Get(req.URL.String())
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.Error(err)
+		log.Error("client.Get")
+		internalError(res, req, err)
 		return
 	}
 	defer resp.Body.Close()
-	mylog.WithResponse(resp).Info("Returned HTTPS response")
-
-	for key, val := range resp.Header {
-		for _, v := range val {
-			res.Header().Add(key, v)
-		}
-	}
-	res.WriteHeader(resp.StatusCode)
-
-	_, err = io.Copy(res, resp.Body)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.Error(err)
+	mylog.WithResponse(resp).Info("Returned response")
+	if err = copyResponse(resp, res); err != nil {
+		internalError(res, req, err)
 		return
 	}
 }
