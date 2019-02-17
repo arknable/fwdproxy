@@ -14,6 +14,7 @@ var ErrInvalidAuth = errors.New("Invalid authentication")
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodConnect {
 		handleTLS(res, req)
+		return
 	}
 	handleHTTP(res, req)
 }
