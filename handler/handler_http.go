@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"io"
 	"net/http"
 
 	mylog "github.com/arknable/fwdproxy/log"
@@ -12,25 +11,11 @@ import (
 
 // Handles HTTP requests
 func handleHTTP(res http.ResponseWriter, req *http.Request) {
-	authExists := true
-	username, password, ok := req.BasicAuth()
-	if !ok {
-		// Check if user uses proxy authentication
-		proxUser, proxPwd, err := parseProxyAuth(req)
-		if err != nil {
-			authExists = false
-		} else {
-			username = proxUser
-			password = proxPwd
-		}
-	}
-	if !authExists {
-		msg := "Unauthorized request"
-		http.Error(res, msg, http.StatusUnauthorized)
-		mylog.WithRequest(req).Warning(msg)
+	username, password, err := proxyAuth(req)
+	if err != nil {
+		internalError(res, req, err)
 		return
 	}
-
 	mylog.WithRequest(req).Info("Incoming HTTP request")
 
 	credFields := log.Fields{
@@ -39,59 +24,36 @@ func handleHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 	valid, err := user.Repo().Validate(username, password)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.WithFields(credFields).Error(err)
+		internalError(res, req, err)
 		return
 	}
 	if !valid {
-		msg := "Forbidden request"
-		http.Error(res, msg, http.StatusForbidden)
-		log.WithFields(credFields).Warning(msg)
+		http.Error(res, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		log.WithFields(credFields).Warning(http.StatusText(http.StatusForbidden))
 		return
 	}
 	log.WithFields(credFields).Info("Authenticated")
 
 	request, err := http.NewRequest(req.Method, req.URL.String(), req.Body)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.Error(err)
+		internalError(res, req, err)
 		return
 	}
-
-	for key, val := range req.Header {
-		if key == "Proxy-Authorization" {
-			continue
-		}
-
-		for _, v := range val {
-			request.Header.Add(key, v)
-		}
-	}
-
+	copyHeader(req.Header, request.Header)
+	request.Header.Del("Proxy-Authorization")
 	mylog.WithRequest(request).Info("Forwarded request")
 
-	client := &http.Client{Transport: server.Transport()}
+	client := server.NewClient()
 	resp, err := client.Do(request)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.Error(err)
+		internalError(res, req, err)
 		return
 	}
 	defer resp.Body.Close()
-
 	mylog.WithResponse(resp).Info("Returned response")
 
-	for key, val := range resp.Header {
-		for _, v := range val {
-			res.Header().Add(key, v)
-		}
-	}
-	res.WriteHeader(resp.StatusCode)
-
-	_, err = io.Copy(res, resp.Body)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		log.Error(err)
+	if err = copyResponse(resp, res); err != nil {
+		internalError(res, req, err)
 		return
 	}
 }

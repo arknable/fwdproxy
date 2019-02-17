@@ -14,7 +14,7 @@ import (
 
 // Handles TLS tunneling
 func handleTLS(res http.ResponseWriter, req *http.Request) {
-	username, password, err := parseProxyAuth(req)
+	username, password, err := proxyAuth(req)
 	if err != nil {
 		msg := "Unauthorized request"
 		http.Error(res, msg, http.StatusUnauthorized)
@@ -64,9 +64,7 @@ func handleTLS(res http.ResponseWriter, req *http.Request) {
 
 	mylog.WithRequest(request).Info("Forwarded HTTPS request")
 
-	client := &http.Client{
-		Transport: server.TLSTransport(),
-	}
+	client := server.NewClient()
 	resp, err := client.Do(request)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)

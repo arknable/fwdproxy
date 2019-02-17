@@ -31,7 +31,7 @@ func WithRequest(req *http.Request) *log.Entry {
 // from an http response informations.
 func WithResponse(res *http.Response) *log.Entry {
 	fields := log.Fields{
-		"status": res.StatusCode,
+		"status": res.Status,
 	}
 	for key, val := range res.Header {
 		for _, v := range val {

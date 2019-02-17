@@ -1,4 +1,4 @@
-package config
+package env
 
 var (
 	// IsProduction is flag to indicates whether this proxy used

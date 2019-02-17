@@ -8,8 +8,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// App's home folder
-var homePath string
+var (
+	// Users' home path
+	homePath string
+
+	// App's home path
+	appHomePath string
+)
 
 // Initialize performs initialization
 func Initialize() error {
@@ -20,27 +25,32 @@ func Initialize() error {
 
 		workPath, err := os.Getwd()
 		if err != nil {
-			hpath = folderName
+			appHomePath = folderName
 			log.WithError(err).Error("Unknown working path, using active path.")
 		} else {
-			hpath = path.Join(workPath, folderName)
+			appHomePath = path.Join(workPath, folderName)
 		}
 	} else {
-		hpath = path.Join(hpath, folderName)
+		homePath = hpath
+		appHomePath = path.Join(hpath, folderName)
 	}
-	homePath = hpath
-	_, err = os.Stat(homePath)
+	_, err = os.Stat(appHomePath)
 	if os.IsNotExist(err) {
-		if err = os.MkdirAll(homePath, os.ModePerm); err != nil {
+		if err = os.MkdirAll(appHomePath, os.ModePerm); err != nil {
 			return err
 		}
 	}
 
-	log.WithField("path", homePath).Info("Using path as Home")
+	log.WithField("path", appHomePath).Info("Using path as Home")
 	return nil
 }
 
 // HomePath returns path to app's home folder
 func HomePath() string {
+	return appHomePath
+}
+
+// UserHomePath returns path to users' home folder
+func UserHomePath() string {
 	return homePath
 }

@@ -2,34 +2,107 @@ package server
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"path"
 	"time"
+
+	"github.com/arknable/fwdproxy/env"
 )
 
 var (
-	// HTTPPort is port for HTTP listening
-	HTTPPort = "8000"
+	// CertificateDir is path to certificate folder
+	CertificateDir string
 
-	// TLSPort is port for HTTPS listening
-	TLSPort = "8001"
+	// CertFileName is certificate's file name
+	CertFileName = "cert.pem"
+
+	// KeyFileName is key's file name
+	KeyFileName = "key.pem"
+
+	// CACertFileName is CA's certificate file name
+	CACertFileName = "ca.pem"
+
+	// Full path to certificate file
+	certPath string
+
+	// Full path to key file
+	keyPath string
+
+	// Port is port for HTTP listening
+	Port = "8000"
+
+	// ProxyAddress is external proxy address for HTTP
+	ProxyAddress = "https://127.0.0.1:9000"
+
+	// ProxyUsername is username to connect to proxy
+	ProxyUsername = "test"
+
+	// ProxyPassword is password of ProxyUsername
+	ProxyPassword = "testpassword"
+
+	// HTTP transport
+	transport *http.Transport
+
+	// HTTP server
+	server *http.Server
 )
 
-// New creates an HTTP server
-func New(handler http.Handler) *http.Server {
-	return &http.Server{
-		Addr:         fmt.Sprintf("127.0.0.1:%s", HTTPPort),
+// Initialize performs initialization
+func Initialize(handler http.Handler) error {
+	CertificateDir = path.Join(env.UserHomePath(), "Certificates")
+	certPath := path.Join(CertificateDir, CertFileName)
+	keyPath := path.Join(CertificateDir, KeyFileName)
+
+	caCert, err := ioutil.ReadFile(path.Join(CertificateDir, CACertFileName))
+	if err != nil {
+		return err
+	}
+	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
+	if err != nil {
+		return err
+	}
+	certPool, err := x509.SystemCertPool()
+	if err != nil {
+		return err
+	}
+	certPool.AppendCertsFromPEM(caCert)
+
+	tlsConfig := &tls.Config{
+		Certificates:       []tls.Certificate{cert},
+		RootCAs:            certPool,
+		InsecureSkipVerify: !env.IsProduction,
+	}
+	tlsConfig.BuildNameToCertificate()
+
+	transport = &http.Transport{
+		TLSClientConfig: tlsConfig,
+		TLSNextProto:    make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+	}
+
+	server = &http.Server{
+		Addr:         fmt.Sprintf("127.0.0.1:%s", Port),
 		ReadTimeout:  20 * time.Second,
 		WriteTimeout: 20 * time.Second,
 		IdleTimeout:  120 * time.Second,
 		Handler:      handler,
+		TLSConfig:    tlsConfig,
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
+
+	return nil
 }
 
-// NewTLS creates an HTTPS server
-func NewTLS(handler http.Handler) *http.Server {
-	srv := New(handler)
-	srv.Addr = fmt.Sprintf("127.0.0.1:%s", TLSPort)
-	return srv
+// Start starts the server
+func Start() error {
+	return server.ListenAndServeTLS(certPath, keyPath)
+}
+
+// NewClient creates new HTTP client
+func NewClient() *http.Client {
+	return &http.Client{
+		Transport: transport,
+	}
 }

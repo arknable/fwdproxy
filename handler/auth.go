@@ -7,7 +7,7 @@ import (
 )
 
 // Extracts Proxy-Authorization from request header.
-func parseProxyAuth(req *http.Request) (string, string, error) {
+func proxyAuth(req *http.Request) (string, string, error) {
 	stringValue := req.Header.Get("Proxy-Authorization")
 	stringValue = strings.Trim(stringValue, "Basic")
 	stringValue = strings.Trim(stringValue, " ")

@@ -6,7 +6,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/arknable/fwdproxy/config"
 	"github.com/arknable/fwdproxy/env"
 	"github.com/arknable/fwdproxy/handler"
 	plog "github.com/arknable/fwdproxy/log"
@@ -16,7 +15,7 @@ import (
 
 // Variables to be set at build
 var (
-	// IsProduction overrides config.IsProduction
+	// IsProduction overrides env.IsProduction
 	IsProduction = "false"
 
 	// BuiltInUsername overrides user.BuiltInUsername
@@ -48,7 +47,7 @@ func main() {
 	if err != nil {
 		log.Error(err)
 	} else {
-		config.IsProduction = isProd
+		env.IsProduction = isProd
 	}
 	user.BuiltInUsername = BuiltInUsername
 	user.BuiltInUserPwd = BuiltInUserPwd
@@ -65,15 +64,13 @@ func main() {
 	}
 	defer repo.Close()
 
-	// tlssrv := server.NewTLS(http.HandlerFunc(handler.HandleRequest))
-	// log.Infof("Listening at %s", tlssrv.Addr)
-	// if err := tlssrv.ListenAndServeTLS(config.CertPath, config.KeyPath); err != nil {
-	// 	log.Fatal(err)
-	// }
+	err = server.Initialize(http.HandlerFunc(handler.HandleRequest))
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	srv := server.New(http.HandlerFunc(handler.HandleRequest))
-	log.Infof("Listening at %s", srv.Addr)
-	if err := srv.ListenAndServe(); err != nil {
+	log.Infof("Listening at %s", server.Port)
+	if err := server.Start(); err != nil {
 		log.Fatal(err)
 	}
 }
