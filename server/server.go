@@ -91,7 +91,7 @@ func Initialize(handler http.Handler) error {
 	}
 
 	server = &http.Server{
-		Addr:         fmt.Sprintf("127.0.0.1:%s", Port),
+		Addr:         fmt.Sprintf(":%s", Port),
 		ReadTimeout:  20 * time.Second,
 		WriteTimeout: 20 * time.Second,
 		IdleTimeout:  120 * time.Second,
