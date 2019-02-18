@@ -35,9 +35,6 @@ var (
 	// Port is port for HTTP listening
 	Port = "8000"
 
-	// TLSProxyAddress is external proxy address for HTTPS
-	TLSProxyAddress = "https://127.0.0.1:9000"
-
 	// ProxyAddress is external proxy address for HTTP
 	ProxyAddress = "http://127.0.0.1:8888"
 
@@ -46,12 +43,6 @@ var (
 
 	// ProxyPassword is password of ProxyUsername
 	ProxyPassword = "testpassword"
-
-	// HTTP proxy URL
-	proxyURL *url.URL
-
-	// HTTPS proxy URL
-	tlsProxyURL *url.URL
 
 	// HTTP transport
 	transport *http.Transport
@@ -87,24 +78,17 @@ func Initialize(handler http.Handler) error {
 	}
 	tlsConfig.BuildNameToCertificate()
 
+	proxyURL, err := url.Parse(ProxyAddress)
+	if err != nil {
+		return err
+	}
+	proxyURL.User = url.UserPassword(ProxyUsername, ProxyPassword)
+
 	transport = &http.Transport{
+		Proxy:           http.ProxyURL(proxyURL),
 		TLSClientConfig: tlsConfig,
 		TLSNextProto:    make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
 	}
-
-	pURL, err := url.Parse(ProxyAddress)
-	if err != nil {
-		return err
-	}
-	pURL.User = url.UserPassword(ProxyUsername, ProxyPassword)
-	proxyURL = pURL
-
-	pURL, err = url.Parse(TLSProxyAddress)
-	if err != nil {
-		return err
-	}
-	pURL.User = url.UserPassword(ProxyUsername, ProxyPassword)
-	tlsProxyURL = pURL
 
 	server = &http.Server{
 		Addr:         fmt.Sprintf("127.0.0.1:%s", Port),
@@ -121,17 +105,11 @@ func Initialize(handler http.Handler) error {
 
 // Start starts the server
 func Start() error {
-	return server.ListenAndServeTLS(certPath, keyPath)
+	return server.ListenAndServe()
 }
 
 // NewClient creates new HTTP client
-func NewClient(useTLS bool) *http.Client {
-	if useTLS {
-		transport.Proxy = http.ProxyURL(tlsProxyURL)
-	} else {
-		transport.Proxy = http.ProxyURL(proxyURL)
-	}
-
+func NewClient() *http.Client {
 	return &http.Client{
 		Transport: transport,
 	}

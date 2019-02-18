@@ -36,7 +36,7 @@ func handleHTTP(res http.ResponseWriter, req *http.Request) {
 	request.Header.Del("Proxy-Authorization")
 	mylog.WithRequest(request).Info("Forwarded request")
 
-	client := server.NewClient(false)
+	client := server.NewClient()
 	resp, err := client.Do(request)
 	if err != nil {
 		internalError(res, req, err)
