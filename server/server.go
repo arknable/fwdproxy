@@ -36,13 +36,16 @@ var (
 	Port = "8000"
 
 	// ProxyAddress is external proxy address for HTTP
-	ProxyAddress = "http://127.0.0.1:9000"
+	ProxyAddress = "http://127.0.0.1:8888"
 
 	// ProxyUsername is username to connect to proxy
 	ProxyUsername = "test"
 
 	// ProxyPassword is password of ProxyUsername
 	ProxyPassword = "testpassword"
+
+	// TLS configuration
+	tlsConfig *tls.Config
 
 	// HTTP transport
 	transport *http.Transport
@@ -71,7 +74,7 @@ func Initialize(handler http.Handler) error {
 	}
 	certPool.AppendCertsFromPEM(caCert)
 
-	tlsConfig := &tls.Config{
+	tlsConfig = &tls.Config{
 		Certificates:       []tls.Certificate{cert},
 		RootCAs:            certPool,
 		InsecureSkipVerify: !env.IsProduction,
@@ -105,7 +108,7 @@ func Initialize(handler http.Handler) error {
 
 // Start starts the server
 func Start() error {
-	return server.ListenAndServeTLS(certPath, keyPath)
+	return server.ListenAndServe()
 }
 
 // NewClient creates new HTTP client
@@ -113,4 +116,9 @@ func NewClient() *http.Client {
 	return &http.Client{
 		Transport: transport,
 	}
+}
+
+// Config returns configuration
+func Config() *tls.Config {
+	return tlsConfig
 }

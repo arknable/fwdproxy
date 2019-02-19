@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/arknable/fwdproxy/user"
 )
@@ -12,11 +13,11 @@ var ErrInvalidAuth = errors.New("Invalid authentication")
 
 // HandleRequest handles both HTTP and HTTPS request
 func HandleRequest(res http.ResponseWriter, req *http.Request) {
-	if req.Method == http.MethodConnect {
-		handleTLS(res, req)
+	if strings.ToLower(req.URL.Scheme) == "http" {
+		handleHTTP(res, req)
 		return
 	}
-	handleHTTP(res, req)
+	handleTLS(res, req)
 }
 
 // Checks request whether it attach Proxy-Authorization information
