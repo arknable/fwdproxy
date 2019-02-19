@@ -37,11 +37,6 @@ func handleTLS(res http.ResponseWriter, req *http.Request) {
 	copyHeader(req.Header, request.Header)
 	request.Header.Del("Proxy-Authorization")
 	request.Header.Del("Proxy-Connection")
-	// request.Header.Set("Host", req.URL.String())
-	// request.Header.Set("X-Forwarded-For", req.RemoteAddr)
-
-	// cred := base64.StdEncoding.EncodeToString([]byte(net.JoinHostPort(server.ProxyUsername, server.ProxyPassword)))
-	// request.Header.Add("Proxy-Authorization", "Basic "+cred)
 
 	mylog.WithRequest(request).Info("Forwarded request")
 
