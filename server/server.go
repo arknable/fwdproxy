@@ -36,7 +36,7 @@ var (
 	Port = "8000"
 
 	// ProxyAddress is external proxy address for HTTP
-	ProxyAddress = "http://127.0.0.1:8888"
+	ProxyAddress = "http://127.0.0.1:9000"
 
 	// ProxyUsername is username to connect to proxy
 	ProxyUsername = "test"
@@ -105,7 +105,7 @@ func Initialize(handler http.Handler) error {
 
 // Start starts the server
 func Start() error {
-	return server.ListenAndServe()
+	return server.ListenAndServeTLS(certPath, keyPath)
 }
 
 // NewClient creates new HTTP client
