@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 )
 
 // Handles HTTPS request
 func serveTLS(w http.ResponseWriter, r *http.Request) {
-	log.Println("serveTLS")
+	fmt.Fprint(w,"serveTLS")
 }
