@@ -10,8 +10,6 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-srv
-test/fwdproxy.db
 fwdproxy
-fwdproxy.db
 users.db
+.idea
