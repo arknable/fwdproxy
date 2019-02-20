@@ -20,11 +20,16 @@ func main() {
 	if err := env.Initialize(); err != nil {
 		log.Fatal(err)
 	}
+
 	repo, err := userrepo.Initialize()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer repo.Close()
+
+	if err := handler.Initialize(); err != nil {
+		log.Fatal(err)
+	}
 
 	httpServer := &http.Server{
 		Addr: net.JoinHostPort("", Port),
