@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"github.com/arknable/fwdproxy/handler"
 	"log"
 	"net"
 	"net/http"
+	"time"
 )
 
 var (
@@ -13,9 +15,17 @@ var (
 )
 
 func main() {
-	addr := net.JoinHostPort("", Port)
-	log.Printf("Listening at %s", addr)
-	if err := http.ListenAndServe(addr, http.HandlerFunc(handler.Serve)); err != nil {
+	srv := &http.Server{
+		Addr: net.JoinHostPort("", Port),
+		IdleTimeout: 1 * time.Minute,
+		ReadTimeout: 1 * time.Minute,
+		WriteTimeout: 1 * time.Minute,
+		Handler: http.HandlerFunc(handler.Serve),
+		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
+	}
+
+	log.Printf("Listening at %s", srv.Addr)
+	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
