@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"github.com/arknable/fwdproxy/server"
 	"io"
 	"net/http"
-	"time"
 )
 
 // Handles HTTP request
@@ -27,11 +27,7 @@ func serveHTTP(w http.ResponseWriter, r *http.Request) {
 	copyHeader(r.Header, request.Header)
 	request.Header.Del("Proxy-Authorization")
 
-	client := &http.Client {
-		Transport: pTransport,
-		Timeout: 30 * time.Second,
-	}
-
+	client := server.NewClient()
 	response, err := client.Do(request)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)

@@ -1,14 +1,12 @@
 package main
 
 import (
-	"crypto/tls"
 	"github.com/arknable/fwdproxy/env"
 	"github.com/arknable/fwdproxy/handler"
+	"github.com/arknable/fwdproxy/server"
 	"github.com/arknable/fwdproxy/userrepo"
 	"log"
-	"net"
 	"net/http"
-	"time"
 )
 
 var (
@@ -27,21 +25,8 @@ func main() {
 	}
 	defer repo.Close()
 
-	if err := handler.Initialize(); err != nil {
+	if err := server.Initialize(http.HandlerFunc(handler.Serve)); err != nil {
 		log.Fatal(err)
 	}
-
-	httpServer := &http.Server{
-		Addr: net.JoinHostPort("", Port),
-		IdleTimeout: 1 * time.Minute,
-		ReadTimeout: 1 * time.Minute,
-		WriteTimeout: 1 * time.Minute,
-		Handler: http.HandlerFunc(handler.Serve),
-		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
-	}
-
-	log.Printf("Listening at %s", httpServer.Addr)
-	if err := httpServer.ListenAndServe(); err != nil {
-		log.Fatal(err)
-	}
+	server.Start()
 }
