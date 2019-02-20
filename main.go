@@ -15,7 +15,7 @@ var (
 )
 
 func main() {
-	srv := &http.Server{
+	httpServer := &http.Server{
 		Addr: net.JoinHostPort("", Port),
 		IdleTimeout: 1 * time.Minute,
 		ReadTimeout: 1 * time.Minute,
@@ -24,8 +24,8 @@ func main() {
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 
-	log.Printf("Listening at %s", srv.Addr)
-	if err := srv.ListenAndServe(); err != nil {
+	log.Printf("Listening at %s", httpServer.Addr)
+	if err := httpServer.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
