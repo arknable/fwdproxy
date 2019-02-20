@@ -8,6 +8,17 @@ import (
 
 // Handles HTTP request
 func serveHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := authenticate(r); err != nil {
+		status := http.StatusInternalServerError
+		if err == ErrAuthRequired {
+			status = http.StatusUnauthorized
+		} else if err == ErrForbidden {
+			status = http.StatusForbidden
+		}
+		http.Error(w, err.Error(), status)
+		return
+	}
+
 	request, err := http.NewRequest(r.Method, r.URL.String(), r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
