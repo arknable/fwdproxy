@@ -1,11 +1,12 @@
-package handler
+package proxy
 
 import (
 	"encoding/base64"
 	"errors"
-	"github.com/arknable/fwdproxy/userrepo"
 	"net/http"
 	"strings"
+
+	"github.com/arknable/fwdproxy/userrepo"
 )
 
 var (
@@ -19,10 +20,10 @@ var (
 // Checks Proxy-Authorization from request header.
 func authenticate(req *http.Request) error {
 	header := req.Header.Get("Proxy-Authorization")
-	if !strings.HasPrefix(header,"Basic") {
+	if !strings.HasPrefix(header, "Basic") {
 		return ErrAuthRequired
 	}
-	header = strings.TrimPrefix(header,"Basic ")
+	header = strings.TrimPrefix(header, "Basic ")
 	decoded, err := base64.StdEncoding.DecodeString(header)
 	decodedString := string(decoded)
 	if !strings.Contains(decodedString, ":") {

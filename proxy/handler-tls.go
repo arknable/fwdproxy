@@ -1,4 +1,4 @@
-package handler
+package proxy
 
 import (
 	"bufio"
@@ -9,12 +9,10 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-
-	"github.com/arknable/fwdproxy/server"
 )
 
 // Handles HTTPS request
-func serveTLS(w http.ResponseWriter, r *http.Request) {
+func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
 	hj, ok := w.(http.Hijacker)
 	if !ok {
 		log.Println("Hijacking not supported")
@@ -25,7 +23,7 @@ func serveTLS(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	hostConn, err := net.Dial("tcp", server.ProxyAddress)
+	hostConn, err := net.Dial("tcp", s.proxy.Address)
 	if err != nil {
 		log.Println(err)
 		return
