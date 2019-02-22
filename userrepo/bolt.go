@@ -20,7 +20,7 @@ type BoltRepository struct {
 
 // Initialize implements Repository.Initialize
 func (r *BoltRepository) Initialize() error {
-	dbPath := path.Join(env.HomePath(), "users.db")
+	dbPath := path.Join(env.AppHomePath(), "users.db")
 	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		return err

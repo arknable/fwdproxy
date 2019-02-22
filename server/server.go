@@ -3,7 +3,6 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/arknable/fwdproxy/env"
 	"log"
 	"net"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"github.com/arknable/fwdproxy/env"
 )
 
 var (
@@ -43,7 +44,7 @@ var (
 func Initialize(handler http.Handler) error {
 	CertificatePath = strings.Trim(CertificatePath, " ")
 	if len(CertificatePath) == 0 {
-		CertificatePath = path.Join(env.UserHomePath(), "Certificates")
+		CertificatePath = path.Join(env.HomePath(), "Certificates")
 	}
 	certPath = path.Join(CertificatePath, "cert.pem")
 	certKeyPath = path.Join(CertificatePath, "key.pem")
@@ -59,20 +60,20 @@ func Initialize(handler http.Handler) error {
 	}
 
 	httpServer = &http.Server{
-		Addr: net.JoinHostPort("", HttpPort),
-		IdleTimeout: 1 * time.Minute,
-		ReadTimeout: 1 * time.Minute,
+		Addr:         net.JoinHostPort("", HttpPort),
+		IdleTimeout:  1 * time.Minute,
+		ReadTimeout:  1 * time.Minute,
 		WriteTimeout: 1 * time.Minute,
-		Handler: handler,
+		Handler:      handler,
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 
 	tlsServer = &http.Server{
-		Addr: net.JoinHostPort("", TlsPort),
-		IdleTimeout: 1 * time.Minute,
-		ReadTimeout: 1 * time.Minute,
+		Addr:         net.JoinHostPort("", TlsPort),
+		IdleTimeout:  1 * time.Minute,
+		ReadTimeout:  1 * time.Minute,
 		WriteTimeout: 1 * time.Minute,
-		Handler: handler,
+		Handler:      handler,
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 
@@ -81,9 +82,9 @@ func Initialize(handler http.Handler) error {
 
 // NewClient creates new HTTP client
 func NewClient() *http.Client {
-	return &http.Client {
+	return &http.Client{
 		Transport: transport,
-		Timeout: 30 * time.Second,
+		Timeout:   30 * time.Second,
 	}
 }
 

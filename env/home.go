@@ -39,12 +39,12 @@ func Initialize() error {
 	return nil
 }
 
-// HomePath returns path to app's home folder
-func HomePath() string {
+// AppHomePath returns path to app's home folder
+func AppHomePath() string {
 	return appHomePath
 }
 
-// UserHomePath returns path to users' home folder
-func UserHomePath() string {
+// HomePath returns path to users' home folder
+func HomePath() string {
 	return homePath
 }
