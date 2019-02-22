@@ -1,17 +1,13 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/arknable/fwdproxy/env"
 	"github.com/arknable/fwdproxy/handler"
 	"github.com/arknable/fwdproxy/server"
 	"github.com/arknable/fwdproxy/userrepo"
-	"log"
-	"net/http"
-)
-
-var (
-	// Port is server port
-	Port = "8000"
 )
 
 func main() {
