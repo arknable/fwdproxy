@@ -1,12 +1,16 @@
 package handler
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
+
+	"github.com/arknable/fwdproxy/server"
 )
 
 // Handles HTTPS request
@@ -21,11 +25,35 @@ func serveTLS(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	hostConn, err := net.Dial("tcp", r.URL.Host)
+	hostConn, err := net.Dial("tcp", server.ProxyAddress)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	reqString := []string{
+		fmt.Sprintf("CONNECT %s %s", r.URL.Host, r.Proto),
+		"Proxy-Authorization: Basic dGVzdDp0ZXN0cGFzc3dvcmQ=",
+		"Proxy-Connection: Keep-Alive",
+		"Connection: Keep-Alive",
+		"\r\n",
+	}
+
+	_, err = fmt.Fprintf(hostConn, strings.Join(reqString, "\r\n"))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	status, err := bufio.NewReader(hostConn).ReadString('\n')
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	if !strings.Contains(status, "200") {
+		log.Println("Failed to initiate CONNECT with external proxy")
+		return
+	}
+
 	_, err = fmt.Fprintf(clientConn, "%s %v %s\r\n\r\n", r.Proto, http.StatusOK, http.StatusText(http.StatusOK))
 	if err != nil {
 		log.Println(err)
