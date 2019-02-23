@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"bufio"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -44,11 +43,10 @@ func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	proxyCred := fmt.Sprintf("%s:%s", proxyConfig.Username, proxyConfig.Password)
-	proxyCredEncoded := base64.StdEncoding.EncodeToString([]byte(proxyCred))
+
 	reqStrings := []string{
 		fmt.Sprintf("CONNECT %s %s", r.URL.Host, r.Proto),
-		fmt.Sprintf("Proxy-Authorization: Basic %s", proxyCredEncoded),
+		fmt.Sprintf("Proxy-Authorization: Basic %s", s.proxyAuthEncoded),
 		"Proxy-Connection: Keep-Alive",
 		"Connection: Keep-Alive",
 		"\r\n",

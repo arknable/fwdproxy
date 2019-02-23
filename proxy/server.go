@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"net"
 	"net/http"
@@ -14,8 +15,13 @@ import (
 // Server is an HTTP server
 type Server struct {
 	Port       string
-	transport  *http.Transport
 	httpServer *http.Server
+
+	// Transport for http request
+	transport *http.Transport
+
+	// Encoded proxy credential
+	proxyAuthEncoded string
 }
 
 // New creates new server
@@ -42,6 +48,9 @@ func New() (*Server, error) {
 		Handler:      srv,
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
+
+	proxyCred := fmt.Sprintf("%s:%s", proxyConfig.Username, proxyConfig.Password)
+	srv.proxyAuthEncoded = base64.StdEncoding.EncodeToString([]byte(proxyCred))
 
 	return srv, nil
 }
