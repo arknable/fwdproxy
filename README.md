@@ -25,6 +25,13 @@ Configuration saved in `$HOME/.fwdproxy/config.conf` file using JSON format as f
   * **username**. `Proxy-Authorization`'s user
   * **password**. `Proxy-Authorization`'s password.
 
+## Default User
+By default, access requires `Proxy-Authorization`. Credential informations kept in `$HOME/.fwdproxy/users.db` using [bolt](https://github.com/etcd-io/bbolt) database. On first use, a default user created as follows,
+
+* Username: `admin`
+* Password: `4dm1n`
+
+More user can be added directly to database file.
 
 ## License
 
