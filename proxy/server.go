@@ -7,31 +7,29 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/arknable/fwdproxy/env"
 )
 
 // Server is an HTTP server
 type Server struct {
 	Port       string
-	proxy      *External
 	transport  *http.Transport
 	httpServer *http.Server
 }
 
 // New creates new server
 func New() (*Server, error) {
-	proxyConfig := &External{
-		Address:  "127.0.0.1:8888",
-		Username: "test",
-		Password: "testpassword",
-	}
-	proxyURL, err := url.Parse(fmt.Sprintf("http://%s", proxyConfig.Address))
+	config := env.Configuration()
+	proxyConfig := config.ExtProxy
+
+	proxyURL, err := url.Parse(fmt.Sprintf("http://%s", net.JoinHostPort(proxyConfig.Address, proxyConfig.Port)))
 	if err != nil {
 		return nil, err
 	}
 	proxyURL.User = url.UserPassword(proxyConfig.Username, proxyConfig.Password)
 	srv := &Server{
-		Port:  "8000",
-		proxy: proxyConfig,
+		Port: config.Port,
 		transport: &http.Transport{
 			Proxy: http.ProxyURL(proxyURL),
 		},

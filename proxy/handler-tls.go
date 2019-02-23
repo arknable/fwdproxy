@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bufio"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -9,10 +10,23 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/arknable/fwdproxy/env"
 )
 
 // Handles HTTPS request
 func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
+	if err := authenticate(r); err != nil {
+		status := http.StatusInternalServerError
+		if err == ErrAuthRequired {
+			status = http.StatusUnauthorized
+		} else if err == ErrForbidden {
+			status = http.StatusForbidden
+		}
+		http.Error(w, err.Error(), status)
+		return
+	}
+
 	hj, ok := w.(http.Hijacker)
 	if !ok {
 		log.Println("Hijacking not supported")
@@ -23,20 +37,23 @@ func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	hostConn, err := net.Dial("tcp", s.proxy.Address)
+
+	proxyConfig := env.Configuration().ExtProxy
+	hostConn, err := net.Dial("tcp", net.JoinHostPort(proxyConfig.Address, proxyConfig.Port))
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	reqString := []string{
+	proxyCred := fmt.Sprintf("%s:%s", proxyConfig.Username, proxyConfig.Password)
+	proxyCredEncoded := base64.StdEncoding.EncodeToString([]byte(proxyCred))
+	reqStrings := []string{
 		fmt.Sprintf("CONNECT %s %s", r.URL.Host, r.Proto),
-		"Proxy-Authorization: Basic dGVzdDp0ZXN0cGFzc3dvcmQ=",
+		fmt.Sprintf("Proxy-Authorization: Basic %s", proxyCredEncoded),
 		"Proxy-Connection: Keep-Alive",
 		"Connection: Keep-Alive",
 		"\r\n",
 	}
-
-	_, err = fmt.Fprintf(hostConn, strings.Join(reqString, "\r\n"))
+	_, err = fmt.Fprintf(hostConn, strings.Join(reqStrings, "\r\n"))
 	if err != nil {
 		log.Println(err)
 		return

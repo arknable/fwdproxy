@@ -15,8 +15,8 @@ var (
 	appHomePath string
 )
 
-// Initialize performs initialization
-func Initialize() error {
+// Initializes home path
+func initHome() error {
 	folderName := ".fwdproxy"
 	hpath, err := homedir.Dir()
 	if err != nil {
