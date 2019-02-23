@@ -48,3 +48,14 @@ func (c *Context) ResponseError(err error, status int) {
 	http.Error(c.response, err.Error(), status)
 	log.Println(err)
 }
+
+// ResponseRaw writes given message to client connection as is
+func (c *Context) ResponseRaw(message string) {
+	if c.clientConn == nil {
+		return
+	}
+	_, err := fmt.Fprintf(c.clientConn, "%s\r\n\r\n", message)
+	if err != nil {
+		log.Println(err)
+	}
+}

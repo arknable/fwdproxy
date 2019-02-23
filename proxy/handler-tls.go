@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -60,23 +59,15 @@ func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
 	}
 	status, err := bufio.NewReader(proxyConn).ReadString('\n')
 	if err != nil {
-		log.Println(err)
+		ctx.ResponseError(errors.New(status), http.StatusServiceUnavailable)
 		return
 	}
 
 	if !strings.Contains(status, "200") {
-		_, err = fmt.Fprintf(clientConn, status)
-		if err != nil {
-			ctx.ResponseError(err, http.StatusInternalServerError)
-		}
+		ctx.ResponseRaw(status)
 		return
 	}
-
-	_, err = fmt.Fprintf(clientConn, "%s %v %s\r\n\r\n", r.Proto, http.StatusOK, http.StatusText(http.StatusOK))
-	if err != nil {
-		ctx.ResponseError(err, http.StatusInternalServerError)
-		return
-	}
+	ctx.ResponseRaw(fmt.Sprintf("%s %v %s", r.Proto, http.StatusOK, http.StatusText(http.StatusOK)))
 
 	waiter := &sync.WaitGroup{}
 	waiter.Add(2)
