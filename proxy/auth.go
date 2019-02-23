@@ -17,17 +17,20 @@ var (
 	ErrForbidden = errors.New("Forbidden access")
 )
 
-// Checks Proxy-Authorization from request header.
-func authenticate(req *http.Request) error {
+// Authenticated checks Proxy-Authorization from request header.
+func (c *Context) Authenticated() bool {
+	req := c.request
 	header := req.Header.Get("Proxy-Authorization")
 	if !strings.HasPrefix(header, "Basic") {
-		return ErrAuthRequired
+		c.ResponseError(ErrAuthRequired, http.StatusUnauthorized)
+		return false
 	}
 	header = strings.TrimPrefix(header, "Basic ")
 	decoded, err := base64.StdEncoding.DecodeString(header)
 	decodedString := string(decoded)
 	if !strings.Contains(decodedString, ":") {
-		return ErrAuthRequired
+		c.ResponseError(ErrAuthRequired, http.StatusUnauthorized)
+		return false
 	}
 	credentials := strings.Split(decodedString, ":")
 	username := credentials[0]
@@ -35,11 +38,13 @@ func authenticate(req *http.Request) error {
 
 	isValid, err := userrepo.Instance().Validate(username, password)
 	if err != nil {
-		return err
+		c.ResponseError(err, http.StatusUnauthorized)
+		return false
 	}
 	if !isValid {
-		return ErrForbidden
+		c.ResponseError(ErrForbidden, http.StatusForbidden)
+		return false
 	}
 
-	return nil
+	return isValid
 }

@@ -15,16 +15,16 @@ import (
 
 // Handles HTTPS request
 func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
-	if err := authenticate(r); err != nil {
-		status := http.StatusInternalServerError
-		if err == ErrAuthRequired {
-			status = http.StatusUnauthorized
-		} else if err == ErrForbidden {
-			status = http.StatusForbidden
-		}
-		http.Error(w, err.Error(), status)
-		return
-	}
+	// if err := authenticate(r); err != nil {
+	// 	status := http.StatusInternalServerError
+	// 	if err == ErrAuthRequired {
+	// 		status = http.StatusUnauthorized
+	// 	} else if err == ErrForbidden {
+	// 		status = http.StatusForbidden
+	// 	}
+	// 	http.Error(w, err.Error(), status)
+	// 	return
+	// }
 
 	hj, ok := w.(http.Hijacker)
 	if !ok {
