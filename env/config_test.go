@@ -39,4 +39,15 @@ func TestInitConfig(t *testing.T) {
 	assert.Equal(t, conf.ExtProxy.Port, defConf.ExtProxy.Port)
 	assert.Equal(t, conf.ExtProxy.Username, defConf.ExtProxy.Username)
 	assert.Equal(t, conf.ExtProxy.Password, defConf.ExtProxy.Password)
+
+	err = initConfig()
+	assert.Nil(t, err)
+	savedConf := Configuration()
+	assert.NotNil(t, savedConf)
+	assert.NotNil(t, savedConf.ExtProxy)
+	assert.Equal(t, conf.Port, savedConf.Port)
+	assert.Equal(t, conf.ExtProxy.Address, savedConf.ExtProxy.Address)
+	assert.Equal(t, conf.ExtProxy.Port, savedConf.ExtProxy.Port)
+	assert.Equal(t, conf.ExtProxy.Username, savedConf.ExtProxy.Username)
+	assert.Equal(t, conf.ExtProxy.Password, savedConf.ExtProxy.Password)
 }
