@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"io"
 	"net/http"
 )
 
@@ -29,10 +28,5 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		ctx.ResponseError(err, http.StatusServiceUnavailable)
 		return
 	}
-	copyHeader(response.Header, w.Header())
-	_, err = io.Copy(w, response.Body)
-	if err != nil {
-		ctx.ResponseError(err, http.StatusInternalServerError)
-		return
-	}
+	ctx.CopyResponse(response)
 }

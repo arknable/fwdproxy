@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -57,5 +58,20 @@ func (c *Context) ResponseRaw(message string) {
 	_, err := fmt.Fprintf(c.clientConn, "%s\r\n\r\n", message)
 	if err != nil {
 		log.Println(err)
+	}
+}
+
+// CopyResponse copies response information from given response
+func (c *Context) CopyResponse(resp *http.Response) {
+	dest := c.response.Header()
+	for key, val := range resp.Header {
+		for _, v := range val {
+			dest.Add(key, v)
+		}
+	}
+	_, err := io.Copy(c.response, resp.Body)
+	if err != nil {
+		c.ResponseError(err, http.StatusInternalServerError)
+		return
 	}
 }
