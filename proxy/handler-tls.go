@@ -36,6 +36,7 @@ func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	defer clientConn.Close()
 
 	proxyConfig := env.Configuration().ExtProxy
 	hostConn, err := net.Dial("tcp", net.JoinHostPort(proxyConfig.Address, proxyConfig.Port))
@@ -43,6 +44,7 @@ func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	defer hostConn.Close()
 
 	reqStrings := []string{
 		fmt.Sprintf("CONNECT %s %s", r.URL.Host, r.Proto),
@@ -78,8 +80,6 @@ func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
 	go transfer(waiter, clientConn, hostConn)
 	go transfer(waiter, hostConn, clientConn)
 	waiter.Wait()
-	clientConn.Close()
-	hostConn.Close()
 }
 
 func transfer(waiter *sync.WaitGroup, src io.ReadCloser, dest io.WriteCloser) {
