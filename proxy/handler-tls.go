@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -15,36 +16,35 @@ import (
 
 // Handles HTTPS request
 func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
-	// if err := authenticate(r); err != nil {
-	// 	status := http.StatusInternalServerError
-	// 	if err == ErrAuthRequired {
-	// 		status = http.StatusUnauthorized
-	// 	} else if err == ErrForbidden {
-	// 		status = http.StatusForbidden
-	// 	}
-	// 	http.Error(w, err.Error(), status)
-	// 	return
-	// }
+	ctx := &Context{
+		response: w,
+		request:  r,
+	}
+	if !ctx.Authenticated() {
+		return
+	}
 
 	hj, ok := w.(http.Hijacker)
 	if !ok {
-		log.Println("Hijacking not supported")
+		ctx.ResponseError(errors.New("Hijacking not supported"), http.StatusServiceUnavailable)
 		return
 	}
 	clientConn, _, err := hj.Hijack()
 	if err != nil {
-		log.Println(err)
+		ctx.ResponseError(err, http.StatusServiceUnavailable)
 		return
 	}
+	ctx.clientConn = clientConn
 	defer clientConn.Close()
 
 	proxyConfig := env.Configuration().ExtProxy
-	hostConn, err := net.Dial("tcp", net.JoinHostPort(proxyConfig.Address, proxyConfig.Port))
+	proxyConn, err := net.Dial("tcp", net.JoinHostPort(proxyConfig.Address, proxyConfig.Port))
 	if err != nil {
-		log.Println(err)
+		ctx.ResponseError(err, http.StatusServiceUnavailable)
 		return
 	}
-	defer hostConn.Close()
+	ctx.proxyConn = proxyConn
+	defer proxyConn.Close()
 
 	reqStrings := []string{
 		fmt.Sprintf("CONNECT %s %s", r.URL.Host, r.Proto),
@@ -53,40 +53,43 @@ func (s *Server) serveTLS(w http.ResponseWriter, r *http.Request) {
 		"Connection: Keep-Alive",
 		"\r\n",
 	}
-	_, err = fmt.Fprintf(hostConn, strings.Join(reqStrings, "\r\n"))
+	_, err = fmt.Fprintf(proxyConn, strings.Join(reqStrings, "\r\n"))
 	if err != nil {
-		log.Println(err)
+		ctx.ResponseError(err, http.StatusInternalServerError)
 		return
 	}
-	status, err := bufio.NewReader(hostConn).ReadString('\n')
+	status, err := bufio.NewReader(proxyConn).ReadString('\n')
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	if !strings.Contains(status, "200") {
-		log.Println("Failed to initiate CONNECT with external proxy")
+		_, err = fmt.Fprintf(clientConn, status)
+		if err != nil {
+			ctx.ResponseError(err, http.StatusInternalServerError)
+		}
 		return
 	}
 
 	_, err = fmt.Fprintf(clientConn, "%s %v %s\r\n\r\n", r.Proto, http.StatusOK, http.StatusText(http.StatusOK))
 	if err != nil {
-		log.Println(err)
+		ctx.ResponseError(err, http.StatusInternalServerError)
 		return
 	}
 
 	waiter := &sync.WaitGroup{}
 	waiter.Add(2)
-	go transfer(waiter, clientConn, hostConn)
-	go transfer(waiter, hostConn, clientConn)
+	go transfer(ctx, waiter, clientConn, proxyConn)
+	go transfer(ctx, waiter, proxyConn, clientConn)
 	waiter.Wait()
 }
 
-func transfer(waiter *sync.WaitGroup, src io.ReadCloser, dest io.WriteCloser) {
+func transfer(ctx *Context, waiter *sync.WaitGroup, src io.ReadCloser, dest io.WriteCloser) {
 	defer waiter.Done()
 	_, err := io.Copy(dest, src)
 	if err != nil {
-		log.Println(err)
+		ctx.ResponseError(err, http.StatusInternalServerError)
 		return
 	}
 }

@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"fmt"
+	"log"
 	"net"
 	"net/http"
 )
@@ -26,4 +28,23 @@ func (c *Context) ResponseError(err error, status int) {
 		http.Error(c.response, err.Error(), status)
 		return
 	}
+
+	if c.clientConn != nil {
+		_, err = fmt.Fprintf(
+			c.clientConn,
+			"%s %v %s\n%s\r\n\r\n",
+			c.request.Proto,
+			status,
+			http.StatusText(status),
+			err,
+		)
+		if err != nil {
+			log.Println(err)
+		}
+
+		return
+	}
+
+	http.Error(c.response, err.Error(), status)
+	log.Println(err)
 }
