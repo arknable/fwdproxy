@@ -33,6 +33,9 @@ By default, access requires `Proxy-Authorization`. Credential informations kept 
 
 More user can be added directly to database file.
 
+## Log
+Log messages is written to `$HOME/.fwdproxy/output.log`.
+
 ## License
 
 This project is licensed under the BSD 2 License - see the [LICENSE](LICENSE) file for details.
