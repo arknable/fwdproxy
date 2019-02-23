@@ -38,15 +38,9 @@ type ServerConfiguration struct {
 	ExtProxy *ExtProxyConfig `json:"proxy"`
 }
 
-// Creates default config
-func createNewConfig(configPath string) error {
-	file, err := os.Create(configPath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	conf := &ServerConfiguration{
+// Creates default configuration
+func defaultConfig() *ServerConfiguration {
+	return &ServerConfiguration{
 		Port: "8000",
 		ExtProxy: &ExtProxyConfig{ // By default, server assumes Tinyproxy
 			Address:  "127.0.0.1",
@@ -55,6 +49,17 @@ func createNewConfig(configPath string) error {
 			Password: "testpassword",
 		},
 	}
+}
+
+// Creates default config
+func createNewConfig(configPath string) error {
+	file, err := os.Create(configPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	conf := defaultConfig()
 	content, err := json.MarshalIndent(conf, "", "\t")
 	if err != nil {
 		return err
